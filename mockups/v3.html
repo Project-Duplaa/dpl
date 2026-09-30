@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Studio — Ingeniería de Software & Ciberseguridad de Élite</title>
+    
+    <!-- Google Fonts: Syne (Vanguardist Tech Display), DM Sans (Clean Body), Space Mono (Code/Telemetry) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#1c1c1c',      // Carbón profundo (Lienzo)
+                        surface: '#2e2926',     // Basalto espresso (Superficies elevadas)
+                        alabaster: '#f1edea',   // Alabastro cálido (Titulares y contraste alto)
+                        lino: '#e1dad2',        // Lino / Crema (Lectura y subtítulos)
+                        cashmere: '#b5a49a',    // Cashmere taupe (Acentos nobles y tags)
+                        graphite: '#5c554f'     // Grafito arenisca (Líneas y bordes)
+                    },
+                    fontFamily: {
+                        syne: ['Syne', 'sans-serif'],
+                        dmsans: ['DM Sans', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Phosphor Icons Web -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        body {
+            background-color: #1c1c1c;
+            color: #f1edea;
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Syne', sans-serif;
+            letter-spacing: -0.025em;
+        }
+
+        .font-mono { font-family: 'Space Mono', monospace; }
+
+        /* Architectural Masthead */
+        .masthead {
+            border-bottom: 1px solid rgba(92, 85, 79, 0.4);
+            background: rgba(28, 28, 28, 0.92);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Lantern Effect for Cards */
+        .lantern-card {
+            position: relative;
+            background-color: #2e2926;
+            border: 1px solid rgba(92, 85, 79, 0.45);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .lantern-card::before {
+            content: '';
+            position: absolute;
+            top: var(--mouse-y, -100%);
+            left: var(--mouse-x, -100%);
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(181, 164, 154, 0.18) 0%, transparent 65%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 1;
+        }
+
+        .lantern-card:hover::before { opacity: 1; }
+        .lantern-card:hover { 
+            border-color: #b5a49a; 
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .lantern-content { position: relative; z-index: 2; }
+
+        /* 3D Canvas Background */
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: #1c1c1c; }
+        ::-webkit-scrollbar-thumb { background: #5c554f; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b5a49a; }
+
+        /* Terminal Cursor Blink */
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .cursor-blink { animation: blink 1s step-end infinite; }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid #b5a49a;
+            color: #f1edea;
+        }
+        .tab-btn {
+            border-bottom: 2px solid transparent;
+            color: #8c827a;
+            transition: all 0.3s ease;
+        }
+
+        /* Tactile Press */
+        .btn-tactile {
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+        }
+        .btn-tactile:active {
+            transform: scale(0.97) translateY(1px);
+        }
+    </style>
+</head>
+<body class="selection:bg-cashmere selection:text-canvas">
+
+    <!-- Architectural Masthead Header -->
+    <header class="masthead fixed top-0 w-full z-50 flex items-center justify-between px-6 md:px-12 py-4">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-surface border border-graphite flex items-center justify-center text-alabaster">
+                <i class="ph-bold ph-code-block text-lg text-cashmere"></i>
+            </div>
+            <span class="font-syne font-extrabold text-lg tracking-tight text-alabaster">
+                AEGIS<span class="text-cashmere">.</span>DEV
+            </span>
+            <span class="hidden sm:inline text-[10px] font-mono px-2 py-0.5 rounded border border-graphite text-cashmere uppercase">
+                Software & Seguridad
+            </span>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-8 text-xs font-mono tracking-wider uppercase text-lino/80">
+            <a href="#capacidades" class="hover:text-alabaster transition-colors">Capacidades</a>
+            <a href="#proyectos" class="hover:text-alabaster transition-colors">Casos de Estudio</a>
+            <a href="#seguridad" class="hover:text-alabaster transition-colors">Seguridad</a>
+            <a href="#metodologia" class="hover:text-alabaster transition-colors">Metodología</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <a href="#contacto" class="btn-tactile flex items-center gap-2 px-5 py-2.5 bg-alabaster text-canvas font-syne font-bold text-xs uppercase tracking-wider rounded hover:bg-lino transition-colors">
+                <i class="ph-bold ph-chat-circle-dots"></i>
+                Hablemos
+            </a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION (HERO STAGE + THREE.JS 3D SCULPTURE) -->
+    <section class="relative w-full min-h-screen flex items-center pt-28 pb-16 px-6 md:px-12 overflow-hidden">
+        <canvas id="hero-canvas"></canvas>
+        
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10 items-center">
+            
+            <!-- Left Headline & Pitch -->
+            <div class="lg:col-span-7 flex flex-col justify-center">
+                <div class="inline-flex items-center gap-2 border border-graphite rounded px-3 py-1 mb-6 bg-surface/70 backdrop-blur w-fit">
+                    <span class="w-2 h-2 rounded-full bg-cashmere animate-pulse"></span>
+                    <span class="text-xs font-mono text-cashmere uppercase tracking-wider">
+                        Desarrollo a Medida // Ciberseguridad Aplicada
+                    </span>
+                </div>
+                
+                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-alabaster leading-[1.06] mb-6">
+                    Software de alto impacto.<br>
+                    <span class="text-cashmere">Seguro por diseño.</span>
+                </h1>
+                
+                <p class="text-base sm:text-lg text-lino/85 max-w-xl mb-10 leading-relaxed font-dmsans">
+                    Construimos plataformas web escalables, backends transaccionales de alta concurrencia y arquitecturas cloud con seguridad militar integrada. Cero deuda técnica. Cero brechas críticas.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    <a href="https://wa.me/573000000000?text=Hola%20AegisDev,%20tengo%20un%20proyecto%20de%20desarrollo%20y%20seguridad%20que%20quiero%20cotizar." 
+                       target="_blank" 
+                       class="btn-tactile flex items-center justify-center gap-2.5 px-7 py-4 bg-alabaster text-canvas font-syne font-bold text-sm uppercase tracking-wider rounded hover:bg-lino shadow-xl">
+                        <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+                        Iniciar Chat en WhatsApp
+                    </a>
+
+                    <a href="mailto:proyectos@aegisdev.tech?subject=Consulta%20de%20Desarrollo%20y%20Seguridad" 
+                       class="btn-tactile flex items-center justify-center gap-2.5 px-7 py-4 border border-graphite bg-surface/70 text-alabaster font-mono text-xs uppercase tracking-wider rounded hover:border-cashmere transition-colors">
+                        <i class="ph ph-envelope-simple text-lg text-cashmere"></i>
+                        Enviar Correo Técnico
+                    </a>
+                </div>
+
+                <!-- High-Impact Live Benchmarks -->
+                <div class="mt-12 pt-8 border-t border-graphite/40 grid grid-cols-3 gap-6 font-mono text-xs text-lino/70">
+                    <div>
+                        <div class="text-2xl font-syne font-extrabold text-alabaster">120k+</div>
+                        <div class="text-[10px] text-cashmere uppercase">Peticiones / Seg</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-syne font-extrabold text-alabaster">&lt; 18ms</div>
+                        <div class="text-[10px] text-cashmere uppercase">Latencia p99</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-syne font-extrabold text-alabaster">99.999%</div>
+                        <div class="text-[10px] text-cashmere uppercase">SLA Producción</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Interactive Code Architecture Console -->
+            <div class="lg:col-span-5 hidden lg:flex flex-col justify-center">
+                <div class="lantern-card w-full shadow-2xl flex flex-col border-graphite">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-graphite bg-[#181615]">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#5c554f]"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#5c554f]"></span>
+                            <span class="w-3 h-3 rounded-full bg-[#5c554f]"></span>
+                            <span class="ml-2 text-xs font-mono text-lino/60">aegis-core/deploy.sh</span>
+                        </div>
+                        <span class="text-[11px] font-mono text-cashmere">PIPELINE VERIFICADO</span>
+                    </div>
+
+                    <div class="p-6 font-mono text-xs text-cashmere leading-relaxed bg-[#141312] space-y-2">
+                        <div class="text-lino/40">// Compilación segura de microservicios</div>
+                        <div class="text-alabaster">$ docker build --target=production -t core-api:latest</div>
+                        <div class="text-lino/60">[+] Building 14.8s (18/18) FINISHED</div>
+                        <div class="text-alabaster">$ aegis verify:sast --engine=strict</div>
+                        <div class="text-emerald-400">✓ Análisis estático: 0 vulnerabilidades (OWASP Top 10)</div>
+                        <div class="text-emerald-400">✓ Dependencias: 100% hashes criptográficos firmados</div>
+                        <div class="text-alabaster">$ terraform apply -auto-approve</div>
+                        <div class="text-lino/60">Apply complete! Resources: 14 deployed to K8s Cluster.</div>
+                        <div class="pt-3 text-alabaster flex items-center gap-1.5">
+                            <span class="text-emerald-400 font-bold">> ESTADO: SISTEMA EN PRODUCCIÓN</span>
+                            <span class="cursor-blink bg-cashmere w-2 h-4 inline-block"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 2. CAPACIDADES CORE (DESARROLLO & SEGURIDAD) -->
+    <section id="capacidades" class="py-28 px-6 md:px-12 border-t border-graphite bg-canvas relative">
+        <div class="max-w-7xl mx-auto">
+            
+            <div class="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <span class="text-xs font-mono text-cashmere uppercase tracking-widest block mb-2">01 // QUÉ HACEMOS</span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-alabaster">Capacidades de Ingeniería</h2>
+                </div>
+                <p class="text-lino/80 max-w-md text-sm">
+                    No creamos sitios web superficiales. Diseñamos e implementamos software empresarial robusto, seguro y capaz de escalar a millones de usuarios sin pestañear.
+                </p>
+            </div>
+
+            <!-- Bento Grid de Capacidades -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(280px,auto)]" id="bento-container">
+                
+                <!-- Card 1: Backends de Alta Concurrencia (Span 2) -->
+                <div class="lantern-card md:col-span-2 p-8 flex flex-col justify-between group">
+                    <div class="lantern-content">
+                        <div class="w-12 h-12 flex items-center justify-center border border-graphite bg-[#1e1b19] rounded mb-6 group-hover:border-cashmere transition-colors">
+                            <i class="ph-duotone ph-cpu text-2xl text-alabaster group-hover:text-cashmere"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-alabaster mb-3">Backends de Alta Concurrencia & APIs</h3>
+                        <p class="text-lino/85 max-w-xl text-sm leading-relaxed">
+                            Construidos en Go, Node.js y Rust. Arquitecturas de microservicios distribuidos con bases de datos optimizadas (PostgreSQL, Redis, ScyllaDB) diseñadas para soportar más de 100k transacciones por segundo con latencia inferior a 20ms.
+                        </p>
+                    </div>
+                    <div class="lantern-content mt-8 flex gap-2 flex-wrap">
+                        <span class="px-3 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere bg-surface/50">Go / Rust</span>
+                        <span class="px-3 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere bg-surface/50">gRPC & GraphQL</span>
+                        <span class="px-3 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere bg-surface/50">Redis Cluster</span>
+                        <span class="px-3 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere bg-surface/50">PostgreSQL Sharded</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Ciberseguridad & DevSecOps -->
+                <div class="lantern-card p-8 flex flex-col justify-between group">
+                    <div class="lantern-content">
+                        <div class="w-12 h-12 flex items-center justify-center border border-graphite bg-[#1e1b19] rounded mb-6 group-hover:border-cashmere transition-colors">
+                            <i class="ph-duotone ph-shield-check text-2xl text-alabaster group-hover:text-cashmere"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-alabaster mb-3">Ciberseguridad & DevSecOps</h3>
+                        <p class="text-lino/85 text-sm leading-relaxed">
+                            Seguridad desde el código fuente. Pipelines automatizados con análisis estático (SAST) y dinámico (DAST), autenticación mTLS y arquitectura Zero-Trust.
+                        </p>
+                    </div>
+                    <div class="lantern-content mt-6 flex gap-2 flex-wrap">
+                        <span class="px-2.5 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere">Zero-Trust</span>
+                        <span class="px-2.5 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere">CI/CD Hardened</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Desarrollo Web Fullstack -->
+                <div class="lantern-card p-8 flex flex-col justify-between group">
+                    <div class="lantern-content">
+                        <div class="w-12 h-12 flex items-center justify-center border border-graphite bg-[#1e1b19] rounded mb-6 group-hover:border-cashmere transition-colors">
+                            <i class="ph-duotone ph-browser text-2xl text-alabaster group-hover:text-cashmere"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-alabaster mb-3">Desarrollo Web Fullstack</h3>
+                        <p class="text-lino/85 text-sm leading-relaxed">
+                            Aplicaciones web modernas con React, Next.js y TypeScript. Interfaces con rendimiento instantáneo, estrictamente tipadas y orientadas a conversión y experiencia de usuario B2B.
+                        </p>
+                    </div>
+                    <div class="lantern-content mt-6 flex gap-2 flex-wrap">
+                        <span class="px-2.5 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere">Next.js</span>
+                        <span class="px-2.5 py-1 border border-graphite/60 rounded text-[11px] font-mono text-cashmere">TypeScript</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Infraestructura Inmutable & Cloud (Span 2) -->
+                <div class="lantern-card md:col-span-2 p-8 flex flex-col justify-between group">
+                    <div class="lantern-content flex flex-col sm:flex-row gap-8 items-start sm:items-center">
+                        <div class="flex-1">
+                            <div class="w-12 h-12 flex items-center justify-center border border-graphite bg-[#1e1b19] rounded mb-6 group-hover:border-cashmere transition-colors">
+                                <i class="ph-duotone ph-hard-drives text-2xl text-alabaster group-hover:text-cashmere"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-alabaster mb-3">Infraestructura Inmutable & Cloud</h3>
+                            <p class="text-lino/85 text-sm leading-relaxed">
+                                Despliegues con Kubernetes, Docker y Terraform. Arquitecturas con tolerancia activa a caídas completas de proveedores de nube con disponibilidad garantizada de 99.999%.
+                            </p>
+                        </div>
+
+                        <!-- Mini Visual Indicator -->
+                        <div class="w-full sm:w-60 border border-graphite bg-[#181615] rounded p-4">
+                            <div class="flex justify-between items-center text-xs font-mono mb-2">
+                                <span class="text-lino/60">Cluster Status</span>
+                                <span class="text-emerald-400 font-bold">ACTIVO // 100%</span>
+                            </div>
+                            <div class="w-full bg-graphite/40 h-1.5 rounded overflow-hidden">
+                                <div class="bg-cashmere h-full w-full"></div>
+                            </div>
+                            <div class="mt-3 text-[10px] font-mono text-lino/50">Multi-Región AWS & GCP</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 3. SHOWCASE INTERACTIVO DE PROYECTOS (CASOS DE ESTUDIO REALES) -->
+    <section id="proyectos" class="py-28 px-6 md:px-12 bg-surface/60 border-t border-graphite relative">
+        <div class="max-w-7xl mx-auto">
+            
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div>
+                    <span class="text-xs font-mono text-cashmere uppercase tracking-widest block mb-2">02 // CASOS DE ESTUDIO</span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-alabaster">Software en Producción</h2>
+                </div>
+                
+                <!-- Interactive Tabs -->
+                <div class="flex gap-6 font-syne font-bold border-b border-graphite w-full md:w-auto overflow-x-auto pb-1">
+                    <button class="tab-btn active pb-2 cursor-pointer text-sm whitespace-nowrap" onclick="switchProject('fintech', this)">
+                        Fintech Core Banking
+                    </button>
+                    <button class="tab-btn pb-2 cursor-pointer text-sm whitespace-nowrap" onclick="switchProject('healthtech', this)">
+                        HealthTech Telemedicina
+                    </button>
+                    <button class="tab-btn pb-2 cursor-pointer text-sm whitespace-nowrap" onclick="switchProject('saas', this)">
+                        Enterprise B2B SaaS
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Project Area -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center" id="project-container">
+                
+                <!-- Left: Description & Metrics -->
+                <div class="lg:col-span-5 flex flex-col justify-center">
+                    <h3 id="sc-title" class="text-2xl sm:text-3xl font-extrabold text-alabaster mb-4">
+                        Motor Transaccional de Pagos B2B
+                    </h3>
+                    
+                    <p id="sc-desc" class="text-lino/85 text-sm leading-relaxed mb-8">
+                        Desarrollamos el núcleo backend de procesamiento para pasarela de pagos internacional en Go + Redis. Soporta picos extremos de transacciones sin pérdida de datos ni bloqueos.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="border border-graphite/70 p-4 rounded bg-canvas/60">
+                            <div class="text-[11px] font-mono text-cashmere mb-1 uppercase">Capacidad Máxima</div>
+                            <div id="sc-metric1" class="text-2xl font-bold font-syne text-alabaster">120,000 tx/s</div>
+                        </div>
+
+                        <div class="border border-graphite/70 p-4 rounded bg-canvas/60">
+                            <div class="text-[11px] font-mono text-cashmere mb-1 uppercase">Latencia p99</div>
+                            <div id="sc-metric2" class="text-2xl font-bold font-syne text-alabaster">18ms</div>
+                        </div>
+
+                        <div class="border border-graphite/70 p-4 rounded bg-canvas/60 col-span-2">
+                            <div class="text-[11px] font-mono text-cashmere mb-1 uppercase">Certificación de Seguridad</div>
+                            <div id="sc-metric3" class="text-sm font-mono text-alabaster flex items-center gap-2">
+                                <i class="ph-fill ph-check-circle text-emerald-400"></i> PCI-DSS Nivel 1 Aprobada
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Code Architecture & Implementation -->
+                <div class="lg:col-span-7">
+                    <div class="lantern-card w-full shadow-2xl flex flex-col border-graphite">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-graphite bg-[#181615]">
+                            <div class="flex items-center gap-2">
+                                <i class="ph-duotone ph-terminal-window text-cashmere"></i>
+                                <span class="text-xs font-mono text-lino/60" id="sc-filename">transaction_engine.go</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-cashmere px-2 py-0.5 rounded border border-graphite/60">CÓDIGO EN PRODUCCIÓN</span>
+                        </div>
+
+                        <div class="p-6 overflow-x-auto bg-canvas font-mono text-xs text-lino/90 leading-relaxed max-h-[380px]" id="sc-code">
+<pre><code class="text-cashmere">func ProcessTransaction(ctx context.Context, req *TxRequest) (*TxResponse, error) {</code>
+  <span class="text-graphite">// 1. Verificación de firma criptográfica y token de idempotencia</span>
+  if err := <span class="text-alabaster">crypto.VerifySignature</span>(req.Payload, req.Signature); err != nil {
+      return nil, status.Errorf(codes.Unauthenticated, "invalid signature: %v", err)
+  }
+
+  <span class="text-graphite">// 2. Bloqueo distribuido atómico mediante Redis Cluster</span>
+  lock, err := redisClient.AcquireLock(ctx, req.IdempotencyKey, 5*time.Second)
+  if err != nil {
+      return nil, status.Errorf(codes.ResourceExhausted, "transaction in progress")
+  }
+  defer lock.Release()
+
+  <span class="text-graphite">// 3. Ejecución atómica en PostgreSQL con réplicas de lectura</span>
+  txResponse, err := postgresPool.ExecTx(ctx, func(tx *sql.Tx) error {
+      return applyDoubleEntryLedger(tx, req)
+  })
+  
+  <span class="text-cashmere">return txResponse, err</span>
+<code>}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 4. SEGURIDAD APLICADA // TERMINAL DE AUDITORÍA INTERACTIVA -->
+    <section id="seguridad" class="py-28 px-6 md:px-12 border-t border-graphite bg-canvas">
+        <div class="max-w-5xl mx-auto flex flex-col items-center text-center">
+            
+            <span class="text-xs font-mono text-cashmere uppercase tracking-widest block mb-2">03 // SEGURIDAD EN VIVO</span>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-alabaster mb-4">
+                Seguridad por Defecto. Siempre.
+            </h2>
+            <p class="text-lino/80 max-w-2xl mb-12 text-sm leading-relaxed">
+                Prueba en vivo nuestro simulador de auditoría continua DAST (Dynamic Application Security Testing) para ver cómo blindamos cada endpoint antes de tocar producción.
+            </p>
+            
+            <div class="w-full text-left lantern-card shadow-2xl border-graphite">
+                <div class="px-4 py-3 border-b border-graphite bg-[#181615] flex justify-between items-center">
+                    <span class="text-xs font-mono text-cashmere uppercase tracking-wider">Consola de Auditoría de Código y APIs</span>
+                    <button onclick="runAuditSimulation()" id="run-audit-btn" class="btn-tactile px-4 py-1.5 bg-alabaster text-canvas font-syne font-bold text-xs uppercase tracking-wider rounded hover:bg-lino transition-colors cursor-pointer">
+                        Ejecutar Auditoría
+                    </button>
+                </div>
+
+                <div id="audit-console" class="p-6 h-[260px] overflow-y-auto font-mono text-xs bg-[#121110] leading-relaxed">
+                    <div class="text-graphite">> Sistema en espera. Haz clic en 'Ejecutar Auditoría' para iniciar el análisis...</div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 5. METODOLOGÍA ÁGIL & BLINDADA -->
+    <section id="metodologia" class="py-28 px-6 md:px-12 border-t border-graphite bg-surface/40">
+        <div class="max-w-7xl mx-auto">
+            
+            <div class="mb-16 text-center max-w-2xl mx-auto">
+                <span class="text-xs font-mono text-cashmere uppercase tracking-widest block mb-2">04 // METODOLOGÍA</span>
+                <h2 class="text-3xl sm:text-5xl font-extrabold text-alabaster mb-4">
+                    Cómo Desarrollamos
+                </h2>
+                <p class="text-lino/80 text-sm">
+                    Sprints quincenales transparentes con código entregado en tu repositorio y validaciones continuas de seguridad.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                
+                <div class="border border-graphite/60 p-6 rounded bg-canvas/80">
+                    <div class="font-mono text-cashmere text-xs mb-3">FASE 01</div>
+                    <h3 class="font-syne font-bold text-lg text-alabaster mb-2">Descubrimiento & Threat Model</h3>
+                    <p class="text-xs text-lino/75 leading-relaxed">
+                        Definición de requerimientos técnicos, arquitectura de datos y modelado de amenazas antes de escribir la primera línea.
+                    </p>
+                </div>
+
+                <div class="border border-graphite/60 p-6 rounded bg-canvas/80">
+                    <div class="font-mono text-cashmere text-xs mb-3">FASE 02</div>
+                    <h3 class="font-syne font-bold text-lg text-alabaster mb-2">Sprint 0: Infraestructura IaC</h3>
+                    <p class="text-xs text-lino/75 leading-relaxed">
+                        Configuración de entornos reproducibles con Terraform y Docker. Pipeline CI/CD con SAST pre-commit.
+                    </p>
+                </div>
+
+                <div class="border border-graphite/60 p-6 rounded bg-canvas/80">
+                    <div class="font-mono text-cashmere text-xs mb-3">FASE 03</div>
+                    <h3 class="font-syne font-bold text-lg text-alabaster mb-2">Desarrollo & Tests Continuos</h3>
+                    <p class="text-xs text-lino/75 leading-relaxed">
+                        Entregas funcionales cada 2 semanas. Tests unitarios, de integración y pruebas de carga automatizadas.
+                    </p>
+                </div>
+
+                <div class="border border-graphite/60 p-6 rounded bg-canvas/80">
+                    <div class="font-mono text-cashmere text-xs mb-3">FASE 04</div>
+                    <h3 class="font-syne font-bold text-lg text-alabaster mb-2">Pentest & Despliegue Zero-Downtime</h3>
+                    <p class="text-xs text-lino/75 leading-relaxed">
+                        Auditoría final de penetración, remediación de hallazgos y puesta en producción sin 1 segundo de interrupción.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 6. CONVERSIÓN DIRECTA ("¿ESTÁS INTERESADO?") -->
+    <section id="contacto" class="py-32 px-6 md:px-12 border-t border-graphite bg-surface relative overflow-hidden">
+        <div class="max-w-4xl mx-auto relative z-10 text-center">
+            
+            <div class="w-14 h-14 rounded border border-graphite bg-canvas flex items-center justify-center text-cashmere text-2xl mx-auto mb-6">
+                <i class="ph-bold ph-chats-circle"></i>
+            </div>
+
+            <h2 class="text-4xl sm:text-6xl font-extrabold text-alabaster mb-6">
+                ¿Listo para construir software de siguiente nivel?
+            </h2>
+            
+            <p class="text-base sm:text-lg text-lino/85 mb-12 max-w-xl mx-auto leading-relaxed font-dmsans">
+                Habla directamente con un ingeniero líder. Sin ejecutivos comerciales, sin presentaciones aburridas ni compromisos forzados.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-5">
+                <a href="https://wa.me/573000000000?text=Hola%20AegisDev,%20tengo%20un%20proyecto%20de%20desarrollo%20y%20deseo%20hablar%20con%20un%20ingeniero." 
+                   target="_blank" 
+                   class="btn-tactile w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-alabaster text-canvas font-syne font-bold text-sm uppercase tracking-wider rounded hover:bg-lino shadow-2xl">
+                    <i class="ph-bold ph-whatsapp-logo text-2xl"></i>
+                    <span>Chatear por WhatsApp</span>
+                </a>
+
+                <a href="mailto:proyectos@aegisdev.tech?subject=Solicitud%20de%20Cotizaci%C3%B3n%20y%20NDA" 
+                   class="btn-tactile w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 border border-graphite bg-canvas text-alabaster font-mono text-xs uppercase tracking-wider rounded hover:border-cashmere transition-colors">
+                    <i class="ph ph-envelope-simple text-xl text-cashmere"></i>
+                    <span>Solicitar Propuesta / NDA</span>
+                </a>
+            </div>
+
+            <div class="mt-12 text-[11px] font-mono text-lino/40 uppercase tracking-widest">
+                ACUERDO DE CONFIDENCIALIDAD (NDA) DISPONIBLE // RESPUESTA EN MENOS DE 4 HORAS
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER SOBERANO -->
+    <footer class="py-10 px-6 md:px-12 border-t border-graphite bg-canvas text-xs font-mono text-lino/50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-alabaster font-bold">AEGIS SOFTWARE & SECURITY STUDIO</span>
+            </div>
+            <div>&copy; 2026 AEGIS DEV. TODOS LOS DERECHOS RESERVADOS.</div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT ENGINE: THREE.JS 3D SCULPTURE + GSAP + INTERACTION -->
+    <script>
+        // --- 1. Three.js Background Implementation ---
+        const initThreeJS = () => {
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Geometric Software Node (Icosahedron with satin dark basalt material)
+            const geometry = new THREE.IcosahedronGeometry(2.6, 0);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0x2e2926,
+                metalness: 0.75,
+                roughness: 0.25,
+                wireframe: true,
+                emissive: 0x1c1c1c,
+                emissiveIntensity: 0.4,
+                clearcoat: 0.9,
+            });
+            const core = new THREE.Mesh(geometry, material);
+            scene.add(core);
+
+            // Inner Accent Geometry
+            const innerGeo = new THREE.OctahedronGeometry(1.4, 0);
+            const innerMat = new THREE.MeshBasicMaterial({
+                color: 0xb5a49a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.25
+            });
+            const innerCore = new THREE.Mesh(innerGeo, innerMat);
+            core.add(innerCore);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x5c554f, 2.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0xf1edea, 4.5);
+            pointLight.position.set(6, 6, 5);
+            scene.add(pointLight);
+            
+            const pointLight2 = new THREE.PointLight(0xb5a49a, 3.2);
+            pointLight2.position.set(-6, -5, -4);
+            scene.add(pointLight2);
+
+            camera.position.z = 6.2;
+            if (window.innerWidth > 1024) {
+                camera.position.x = -2.2;
+            }
+
+            // Mouse interaction with fluid inertia
+            let mouseX = 0, mouseY = 0;
+            let targetX = 0, targetY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - window.innerWidth / 2) * 0.0012;
+                mouseY = (event.clientY - window.innerHeight / 2) * 0.0012;
+            });
+
+            const animate = () => {
+                requestAnimationFrame(animate);
+                
+                targetX = mouseX * 2.2;
+                targetY = mouseY * 2.2;
+                
+                core.rotation.y += 0.0025;
+                core.rotation.x += 0.0012;
+                innerCore.rotation.y -= 0.004;
+                
+                // Damped inertia
+                core.rotation.y += 0.05 * (targetX - core.rotation.y);
+                core.rotation.x += 0.05 * (targetY - core.rotation.x);
+                
+                renderer.render(scene, camera);
+            };
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                if (window.innerWidth > 1024) camera.position.x = -2.2;
+                else camera.position.x = 0;
+            });
+        };
+        initThreeJS();
+
+        // --- 2. Lantern Hover Effect on Cards ---
+        document.querySelectorAll('.lantern-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // --- 3. Showcase Tab Switcher Data ---
+        const projectData = {
+            fintech: {
+                title: "Motor Transaccional de Pagos B2B",
+                desc: "Desarrollamos el núcleo backend de procesamiento para pasarela de pagos internacional en Go + Redis. Soporta picos extremos de transacciones sin pérdida de datos ni bloqueos.",
+                m1: "120,000 tx/s", m1l: "Capacidad Máxima",
+                m2: "18ms", m2l: "Latencia p99",
+                m3: `<i class="ph-fill ph-check-circle text-emerald-400"></i> PCI-DSS Nivel 1 Aprobada`, m3l: "Certificación de Seguridad",
+                file: "transaction_engine.go",
+                code: `func ProcessTransaction(ctx context.Context, req *TxRequest) (*TxResponse, error) {
+  // 1. Verificación de firma criptográfica y token de idempotencia
+  if err := crypto.VerifySignature(req.Payload, req.Signature); err != nil {
+      return nil, status.Errorf(codes.Unauthenticated, "invalid signature: %v", err)
+  }
+
+  // 2. Bloqueo distribuido atómico mediante Redis Cluster
+  lock, err := redisClient.AcquireLock(ctx, req.IdempotencyKey, 5*time.Second)
+  if err != nil {
+      return nil, status.Errorf(codes.ResourceExhausted, "transaction in progress")
+  }
+  defer lock.Release()
+
+  // 3. Ejecución atómica en PostgreSQL con réplicas de lectura
+  txResponse, err := postgresPool.ExecTx(ctx, func(tx *sql.Tx) error {
+      return applyDoubleEntryLedger(tx, req)
+  })
+  
+  return txResponse, err
+}`
+            },
+            healthtech: {
+                title: "Plataforma Web EMR & Telemedicina",
+                desc: "Desarrollamos una plataforma web de videoconsultas encriptadas con WebRTC y expediente clínico electrónico (EMR). Cifrado AES-256 en reposo y arquitectura Zero-Trust estricta.",
+                m1: "0 Fugas", m1l: "Incidentes de Datos",
+                m2: "AES-256", m2l: "Cifrado en Reposo",
+                m3: `<i class="ph-fill ph-shield-check text-emerald-400"></i> Certificación HIPAA & SOC 2`, m3l: "Cumplimiento Regulatorio",
+                file: "webrtc_signaling.ts",
+                code: `export class SecureSignalingChannel {
+  private wss: WebSocketServer;
+
+  constructor() {
+    this.wss = new WebSocketServer({ port: 443, verifyClient: this.verifyClientToken });
+  }
+
+  private verifyClientToken(info: any, callback: Function) {
+    // Verificación estricta de token con mTLS
+    const token = info.req.headers['x-auth-token'];
+    const decoded = JWT.verify(token, process.env.CERT_PUBLIC_KEY);
+    if (!decoded.roles.includes('CLINICIAN_AUTH')) {
+      return callback(false, 401, 'Acceso No Autorizado');
+    }
+    callback(true);
+  }
+}`
+            },
+            saas: {
+                title: "Migración a Microservicios B2B SaaS",
+                desc: "Refactorizamos un monolito legado hacia microservicios orquestados en Kubernetes y aprovisionados con Terraform. Redujimos el 60% de costos cloud con 99.999% de uptime.",
+                m1: "99.999%", m1l: "Disponibilidad SLA",
+                m2: "60%", m2l: "Ahorro en Cloud",
+                m3: `<i class="ph-fill ph-cloud-check text-emerald-400"></i> Redundancia Multi-Zona Activa`, m3l: "Resiliencia Operativa",
+                file: "cluster_provisioning.tf",
+                code: `resource "aws_eks_cluster" "enterprise_production" {
+  name     = "aegis-enterprise-cluster"
+  role_arn = aws_iam_role.eks_master_role.arn
+  version  = "1.29"
+
+  vpc_config {
+    subnet_ids              = module.vpc.private_subnets
+    endpoint_private_access = true
+    endpoint_public_access  = false # Seguro por diseño: sin IP pública
+  }
+
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = aws_kms_key.vault_kms_key.arn
+    }
+  }
+}`
+            }
+        };
+
+        function switchProject(projectId, tabElement) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (tabElement) tabElement.classList.add('active');
+            
+            const p = projectData[projectId];
+            
+            gsap.to(['#sc-title', '#sc-desc', '#sc-metric1', '#sc-metric2', '#sc-metric3', '#sc-code'], {
+                opacity: 0, y: 5, duration: 0.18, stagger: 0.03, onComplete: () => {
+                    document.getElementById('sc-title').textContent = p.title;
+                    document.getElementById('sc-desc').textContent = p.desc;
+                    document.getElementById('sc-metric1').textContent = p.m1;
+                    document.getElementById('sc-metric1').previousElementSibling.textContent = p.m1l;
+                    document.getElementById('sc-metric2').textContent = p.m2;
+                    document.getElementById('sc-metric2').previousElementSibling.textContent = p.m2l;
+                    document.getElementById('sc-metric3').innerHTML = p.m3;
+                    document.getElementById('sc-metric3').previousElementSibling.textContent = p.m3l;
+                    document.getElementById('sc-filename').textContent = p.file;
+                    
+                    const codeBlock = document.getElementById('sc-code');
+                    codeBlock.innerHTML = `<pre><code class="text-cashmere">${p.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+                    codeBlock.innerHTML = codeBlock.innerHTML.replace(/\/\/.*/g, match => `<span class="text-graphite">${match}</span>`);
+
+                    gsap.to(['#sc-title', '#sc-desc', '#sc-metric1', '#sc-metric2', '#sc-metric3', '#sc-code'], {
+                        opacity: 1, y: 0, duration: 0.25, stagger: 0.03
+                    });
+                }
+            });
+        }
+
+        // --- 4. Interactive Security Audit Simulation ---
+        function runAuditSimulation() {
+            const btn = document.getElementById('run-audit-btn');
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            const consoleDiv = document.getElementById('audit-console');
+            consoleDiv.innerHTML = `<div class="text-cashmere mb-2">$ aegis audit:dast --target=production --mode=strict</div>`;
+            
+            const steps = [
+                { text: "[INICIO] Iniciando escaneo de vectores de ataque en APIs...", color: "text-graphite", delay: 400 },
+                { text: "[SONDEO] Evaluando controladores de ingreso (puertos 80, 443)...", color: "text-graphite", delay: 1000 },
+                { text: "[PASS] Cumplimiento TLS v1.3 verificado. Cifrado AES-256 forzado.", color: "text-emerald-400", delay: 1800 },
+                { text: "[INYECCIÓN] Probando payloads de inyección SQL y XSS en endpoints de auth...", color: "text-amber-400", delay: 2600 },
+                { text: "[PASS] WAF bloqueó 100% de payloads maliciosos. Rate-limiting activo.", color: "text-emerald-400", delay: 3400 },
+                { text: "[AUTH] Analizando tokens JWT y control de acceso RBAC...", color: "text-graphite", delay: 4100 },
+                { text: "[PASS] Validación Zero-Trust exitosa. 0 escalaciones de privilegios posibles.", color: "text-emerald-400", delay: 4800 },
+                { text: "[ÉXITO] Auditoría completada: 0 vulnerabilidades. Código blindado para producción.", color: "text-alabaster font-bold", delay: 5600 }
+            ];
+
+            steps.forEach(step => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = `${step.color} mb-1`;
+                    line.textContent = `> ${step.text}`;
+                    consoleDiv.appendChild(line);
+                    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                }, step.delay);
+            });
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }, 6000);
+        }
+    </script>
+</body>
+</html>

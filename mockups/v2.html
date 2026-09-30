@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth bg-[#1c1c1c]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Core — Ingeniería de Precisión en Seguridad e Infraestructura</title>
+  
+  <!-- Fonts: Cinzel (Monumental Architectural Serif), DM Sans (Refined Body), Space Mono (Haute Telemetry) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons Web -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#1c1c1c',   // Canvas base oscuro
+            basalt: '#2e2926',     // Superficie monolítica elevada
+            graphite: '#5c554f',   // Líneas y bordes arquitectónicos
+            cashmere: '#b5a49a',   // Acento cálido y noble
+            linen: '#e1dad2',      // Texto de lectura y subtítulos
+            alabaster: '#f1edea',  // Titulares monumentales de máximo contraste
+          },
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['Space Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Three.js & GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <style>
+    :root {
+      --color-obsidian: #1c1c1c;
+      --color-basalt: #2e2926;
+      --color-graphite: #5c554f;
+      --color-cashmere: #b5a49a;
+      --color-linen: #e1dad2;
+      --color-alabaster: #f1edea;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--color-obsidian);
+      color: var(--color-linen);
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.8;
+      overflow-x: hidden;
+      margin: 0;
+    }
+
+    ::selection {
+      background-color: var(--color-cashmere);
+      color: var(--color-obsidian);
+    }
+
+    /* Subtle Architectural Grain */
+    .procedural-grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Architectural Monolith Card */
+    .card-monolith {
+      background-color: var(--color-basalt);
+      border: 1px solid rgba(181, 164, 154, 0.12);
+      box-shadow: 
+        inset 0 1px 0 rgba(241, 237, 234, 0.05),
+        0 20px 40px -15px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Soft ambient warmth flashlight */
+    .card-monolith::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(500px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(181, 164, 154, 0.08), transparent 50%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 2;
+    }
+
+    .card-monolith:hover::after {
+      opacity: 1;
+    }
+
+    .card-monolith:hover {
+      border-color: rgba(181, 164, 154, 0.28);
+      transform: translateY(-2px);
+    }
+
+    /* Tactile Architectural Buttons */
+    .btn-tactile {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: var(--color-alabaster);
+      color: var(--color-obsidian);
+      border: 1px solid var(--color-alabaster);
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-linen);
+      border-color: var(--color-cashmere);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-secondary {
+      background-color: rgba(46, 41, 38, 0.7);
+      color: var(--color-linen);
+      border: 1px solid rgba(181, 164, 154, 0.2);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-cashmere);
+      color: var(--color-alabaster);
+      transform: translateY(-2px);
+      background-color: var(--color-basalt);
+    }
+
+    .btn-tactile:active {
+      transform: scale(0.98) translateY(1px);
+    }
+
+    /* 3D Canvas Container */
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 55vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    @media (max-width: 1024px) {
+      #canvas-container {
+        width: 100vw;
+        height: 60vh;
+        top: 10vh;
+        opacity: 0.35;
+      }
+    }
+
+    /* Telemetry micro typography */
+    .telemetry {
+      font-family: 'Space Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-cashmere);
+    }
+
+    /* Stepper Interactive Sequence */
+    .step-nav-item {
+      border-left: 2px solid rgba(92, 85, 79, 0.3);
+      padding-left: 1.5rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      opacity: 0.45;
+    }
+
+    .step-nav-item:hover {
+      opacity: 0.8;
+      border-left-color: rgba(181, 164, 154, 0.5);
+    }
+
+    .step-nav-item.active {
+      opacity: 1;
+      border-left-color: var(--color-cashmere);
+    }
+
+    .step-pane {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .step-pane.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Pulse Beacon for Security Status */
+    .beacon {
+      animation: warmBeacon 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    @keyframes warmBeacon {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(2.4); opacity: 0; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <div class="procedural-grain"></div>
+
+  <!-- FLOATING QUIET LUXURY NAV -->
+  <nav class="fixed top-0 left-0 w-full z-50 py-5 px-6 md:px-16 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between py-3.5 px-6 rounded-lg bg-obsidian/80 backdrop-blur-md border border-cashmere/10">
+      
+      <!-- Brand Identity -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-7 h-7 bg-basalt border border-cashmere/20 flex items-center justify-center text-cashmere transition-colors group-hover:border-cashmere">
+          <i class="ph-bold ph-shield-check text-base"></i>
+        </div>
+        <span class="font-display font-medium tracking-[0.2em] text-alabaster text-sm uppercase">
+          Aegis<span class="text-cashmere">.</span>Infra
+        </span>
+      </a>
+
+      <!-- Minimalist Navigation Links -->
+      <div class="hidden md:flex items-center gap-10 telemetry">
+        <a href="#quienes-somos" class="text-linen/70 hover:text-alabaster transition-colors">Filosofía</a>
+        <a href="#capacidades" class="text-linen/70 hover:text-alabaster transition-colors">Capacidades</a>
+        <a href="#flujo" class="text-linen/70 hover:text-alabaster transition-colors">Metodología</a>
+        <a href="#evidencia" class="text-linen/70 hover:text-alabaster transition-colors">Evidencia</a>
+      </div>
+
+      <!-- Quick Action -->
+      <div class="flex items-center gap-4">
+        <a href="#contacto" class="btn-tactile btn-secondary px-5 py-2 rounded text-xs telemetry tracking-wider">
+          Iniciar Diálogo
+        </a>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- 1. HERO SECTION (HAUTE ARCHITECTURE + 3D MONOLITH) -->
+  <section id="hero" class="relative min-h-screen flex items-center pt-28 pb-20 border-b border-graphite/30 overflow-hidden">
+    
+    <!-- 3D Basalt Monolith Sculpture Canvas -->
+    <div id="canvas-container"></div>
+
+    <div class="max-w-7xl mx-auto px-6 md:px-16 w-full relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <div class="lg:col-span-7 flex flex-col justify-center">
+        
+        <!-- Status Eyebrow -->
+        <div class="inline-flex items-center gap-3 mb-8">
+          <span class="relative flex h-2 w-2">
+            <span class="beacon absolute inline-flex h-full w-full rounded-full bg-cashmere"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-cashmere"></span>
+          </span>
+          <span class="telemetry">ESTADO DE DEFENSA // ZERO-TRUST ACTIVO</span>
+        </div>
+
+        <!-- Monumental Architectural Headline -->
+        <h1 class="font-display text-4xl sm:text-6xl lg:text-[4.2rem] text-alabaster leading-[1.08] tracking-tight mb-8 font-normal">
+          Ingeniería de Precisión para <br class="hidden sm:inline">
+          <span class="italic font-light text-linen">Infraestructura</span> Crítica.
+        </h1>
+
+        <!-- Purpose & Value -->
+        <p class="text-linen/80 text-base sm:text-lg max-w-xl mb-12 font-light leading-relaxed">
+          Diseñamos, auditamos y blindamos sistemas distribuidos de alta escala. Sin intermediarios, sin promesas comerciales vacías. Solo ingeniería pura y rigurosa para directores de tecnología y CISOs.
+        </p>
+
+        <!-- Direct Actions -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-5">
+          <a href="https://wa.me/573000000000?text=Hola%20AegisInfra,%20deseo%20evaluar%20la%20seguridad%20y%20resiliencia%20de%20nuestra%20infraestructura." 
+             target="_blank" 
+             class="btn-tactile btn-primary px-8 py-4 rounded font-display tracking-widest text-xs uppercase flex items-center justify-center gap-3">
+            <i class="ph-bold ph-whatsapp-logo text-base"></i>
+            <span>Conversar en WhatsApp</span>
+          </a>
+
+          <a href="mailto:ingenieria@aegisinfra.tech?subject=Consulta%20T%C3%A9cnica%20de%20Arquitectura" 
+             class="btn-tactile btn-secondary px-8 py-4 rounded font-mono text-xs telemetry tracking-wider flex items-center justify-center gap-3">
+            <i class="ph ph-envelope-simple text-base text-cashmere"></i>
+            <span>Enviar Correo Técnico</span>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom Telemetry Strip -->
+    <div class="absolute bottom-0 left-0 w-full py-4 border-t border-graphite/20 bg-obsidian/70 backdrop-blur-sm hidden md:block">
+      <div class="max-w-7xl mx-auto px-16 flex items-center justify-between telemetry text-[10px] text-linen/60">
+        <span>SLA EN PRODUCCIÓN: <strong class="text-alabaster">99.999%</strong></span>
+        <span>LATENCIA DE LATENCIA P99: <strong class="text-alabaster">&lt; 45MS</strong></span>
+        <span>PARADIGMA: <strong class="text-alabaster">INFRAESTRUCTURA INMUTABLE (IAC)</strong></span>
+        <span>AUDITORÍA: <strong class="text-alabaster">SOC 2 / ISO 27001 ALIGNED</strong></span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 2. QUIÉNES SOMOS (FILOSOFÍA BRUTALISTA & SERIEDAD) -->
+  <section id="quienes-somos" class="py-32 border-b border-graphite/30 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-16">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+        
+        <div class="lg:col-span-5">
+          <span class="telemetry block mb-4">01 // FILOSOFÍA DE INGENIERÍA</span>
+          <h2 class="font-display text-3xl sm:text-4xl text-alabaster leading-snug mb-6 font-normal">
+            La seguridad no es un parche. <br>
+            Es la estructura misma del edificio.
+          </h2>
+          <div class="w-12 h-px bg-cashmere/40 mb-6"></div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6 text-linen/80 text-base leading-relaxed font-light">
+          <p>
+            En un entorno saturado de promesas superficiales y falsos paneles de control, nuestra postura es de silencio, rigor y solidez técnica. Concebimos cada sistema informático como una obra de arquitectura monumental: construida con fundamentos deterministas capaces de resistir terremotos de tráfico y ataques adversarios sin inmutarse.
+          </p>
+          <p>
+            No vendemos software empaquetado. Actuamos como el equipo de ingeniería táctica de confianza para organizaciones que no tienen margen de error: plataformas bancarias, sistemas de telemedicina con datos confidenciales y redes transaccionales globales.
+          </p>
+
+          <div class="pt-6 grid grid-cols-2 gap-8 border-t border-graphite/30">
+            <div>
+              <div class="font-display text-3xl text-alabaster mb-1">0%</div>
+              <div class="telemetry text-[10px]">Tolerancia a brechas</div>
+            </div>
+            <div>
+              <div class="font-display text-3xl text-alabaster mb-1">100%</div>
+              <div class="telemetry text-[10px]">Reproducibilidad en código</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3. QUÉ HACEMOS (CAPACIDADES MONOLÍTICAS INTERACTIVAS) -->
+  <section id="capacidades" class="py-32 border-b border-graphite/30 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-16">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+        <div>
+          <span class="telemetry block mb-3">02 // CAPACIDADES CORE</span>
+          <h2 class="font-display text-3xl sm:text-5xl text-alabaster font-normal">
+            Qué Construimos y Defendemos
+          </h2>
+        </div>
+        <p class="max-w-md text-linen/70 text-sm font-light">
+          Tres pilares indivisibles de ingeniería para blindar el ciclo de vida completo de tu infraestructura.
+        </p>
+      </div>
+
+      <!-- 3 Monolithic Structural Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Card 1 -->
+        <div class="card-monolith p-10 rounded-sm flex flex-col justify-between min-h-[420px]">
+          <div>
+            <div class="telemetry mb-6 text-cashmere">PILAR I</div>
+            <h3 class="font-display text-2xl text-alabaster mb-4 font-medium">
+              Arquitectura Resiliente & Cloud
+            </h3>
+            <p class="text-linen/75 text-sm leading-relaxed mb-6 font-light">
+              Diseño y migración de sistemas distribuidos tolerantes a fallos de zona. Orquestación inmutable con Kubernetes, Terraform y topologías multirregión activo-activo.
+            </p>
+          </div>
+
+          <div class="pt-6 border-t border-graphite/30 space-y-2 telemetry text-[10px] text-linen/60">
+            <div class="flex justify-between">
+              <span>ORQUESTACIÓN</span>
+              <span class="text-alabaster">K8S / TERRAFORM</span>
+            </div>
+            <div class="flex justify-between">
+              <span>DISPONIBILIDAD</span>
+              <span class="text-alabaster">ACTIVO-ACTIVO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card-monolith p-10 rounded-sm flex flex-col justify-between min-h-[420px]">
+          <div>
+            <div class="telemetry mb-6 text-cashmere">PILAR II</div>
+            <h3 class="font-display text-2xl text-alabaster mb-4 font-medium">
+              DevSecOps & Supply Chain
+            </h3>
+            <p class="text-linen/75 text-sm leading-relaxed mb-6 font-light">
+              Integración de análisis estático (SAST) y dinámico (DAST) automatizado en pipelines de CI/CD. Verificación criptográfica de artefactos y bloqueo estricto de regresiones.
+            </p>
+          </div>
+
+          <div class="pt-6 border-t border-graphite/30 space-y-2 telemetry text-[10px] text-linen/60">
+            <div class="flex justify-between">
+              <span>VERIFICACIÓN</span>
+              <span class="text-alabaster">SAST / DAST CONTINUO</span>
+            </div>
+            <div class="flex justify-between">
+              <span>POLÍTICA</span>
+              <span class="text-alabaster">ZERO REGRESSION</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-monolith p-10 rounded-sm flex flex-col justify-between min-h-[420px]">
+          <div>
+            <div class="telemetry mb-6 text-cashmere">PILAR III</div>
+            <h3 class="font-display text-2xl text-alabaster mb-4 font-medium">
+              Hardening & Auditorías
+            </h3>
+            <p class="text-linen/75 text-sm leading-relaxed mb-6 font-light">
+              Análisis forense de código fuente, penetration testing de caja blanca y fortificación estricta de sistemas operativos y endpoints bajo CIS Benchmarks e ISO 27001.
+            </p>
+          </div>
+
+          <div class="pt-6 border-t border-graphite/30 space-y-2 telemetry text-[10px] text-linen/60">
+            <div class="flex justify-between">
+              <span>ESTÁNDAR</span>
+              <span class="text-alabaster">CIS BENCHMARK L2</span>
+            </div>
+            <div class="flex justify-between">
+              <span>METODOLOGÍA</span>
+              <span class="text-alabaster">CAJA BLANCA / GRIS</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. METODOLOGÍA & FLUJO SECUENCIAL INTERACTIVO -->
+  <section id="flujo" class="py-32 border-b border-graphite/30 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-16">
+      
+      <div class="mb-20">
+        <span class="telemetry block mb-3">03 // PROCESO RIGUROSO</span>
+        <h2 class="font-display text-3xl sm:text-5xl text-alabaster font-normal">
+          El Ciclo de Blindaje & Despliegue
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        
+        <!-- Navigation Tabs -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+          <div class="step-nav-item active" onclick="setStep('step-1', this)">
+            <span class="telemetry block mb-1">FASE I</span>
+            <h4 class="font-display text-lg text-alabaster mb-1">Inspección Forense</h4>
+            <p class="text-xs text-linen/60 font-light">Auditoría profunda de la superficie de ataque.</p>
+          </div>
+
+          <div class="step-nav-item" onclick="setStep('step-2', this)">
+            <span class="telemetry block mb-1">FASE II</span>
+            <h4 class="font-display text-lg text-alabaster mb-1">Topología Inmutable</h4>
+            <p class="text-xs text-linen/60 font-light">Modelado arquitectónico como código (IaC).</p>
+          </div>
+
+          <div class="step-nav-item" onclick="setStep('step-3', this)">
+            <span class="telemetry block mb-1">FASE III</span>
+            <h4 class="font-display text-lg text-alabaster mb-1">Automatización DevSecOps</h4>
+            <p class="text-xs text-linen/60 font-light">Pipelines con puertas automáticas de seguridad.</p>
+          </div>
+
+          <div class="step-nav-item" onclick="setStep('step-4', this)">
+            <span class="telemetry block mb-1">FASE IV</span>
+            <h4 class="font-display text-lg text-alabaster mb-1">Resiliencia & Telemetría</h4>
+            <p class="text-xs text-linen/60 font-light">Observabilidad eBPF y garantía de 99.999% SLA.</p>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="lg:col-span-8">
+          
+          <div id="step-1" class="step-pane active card-monolith p-12 rounded-sm">
+            <span class="telemetry text-cashmere block mb-4">FASE 01 // AUDITORÍA DE SUPERFICIE</span>
+            <h3 class="font-display text-2xl sm:text-3xl text-alabaster mb-6 font-normal">
+              Diagnóstico Quirúrgico de Vulnerabilidades
+            </h3>
+            <p class="text-linen/80 text-sm leading-relaxed mb-8 font-light">
+              Mapeamos cada puerto, contenedor, política IAM y endpoint expuesto. No entregamos informes genéricos de 200 páginas: proporcionamos una matriz de riesgo priorizada con pruebas de concepto reales y la solución de código exacta para cada hallazgo.
+            </p>
+            <div class="p-5 bg-obsidian border border-graphite/30 font-mono text-xs text-linen/70 space-y-2">
+              <div class="text-cashmere">// Diagnóstico inicial de topología</div>
+              <div class="text-alabaster">> Malla de servicios: 120 nodos evaluados</div>
+              <div class="text-linen/60">> Hallazgos críticos mitigados en 48h: 100%</div>
+            </div>
+          </div>
+
+          <div id="step-2" class="step-pane card-monolith p-12 rounded-sm">
+            <span class="telemetry text-cashmere block mb-4">FASE 02 // ARQUITECTURA IAC</span>
+            <h3 class="font-display text-2xl sm:text-3xl text-alabaster mb-6 font-normal">
+              Diseño de Topología Determinista e Inmutable
+            </h3>
+            <p class="text-linen/80 text-sm leading-relaxed mb-8 font-light">
+              Convertimos toda la infraestructura física y cloud en código reproducible con Terraform. Implementamos segmentación de red estricta y zero-trust mTLS: ningún componente confía en otro por defecto.
+            </p>
+            <div class="p-5 bg-obsidian border border-graphite/30 font-mono text-xs text-linen/70 space-y-2">
+              <div class="text-cashmere">// Verificación de Drift en Terraform</div>
+              <div class="text-alabaster">> Infraestructura como Código: 0% desvío manual</div>
+              <div class="text-linen/60">> Microsegmentación mTLS: Enforced</div>
+            </div>
+          </div>
+
+          <div id="step-3" class="step-pane card-monolith p-12 rounded-sm">
+            <span class="telemetry text-cashmere block mb-4">FASE 03 // PIPELINE CI/CD</span>
+            <h3 class="font-display text-2xl sm:text-3xl text-alabaster mb-6 font-normal">
+              Blindaje de la Cadena de Suministro de Software
+            </h3>
+            <p class="text-linen/80 text-sm leading-relaxed mb-8 font-light">
+              Automatizamos las comprobaciones de seguridad directamente en tu flujo de desarrollo. Si un cambio introduce una librería comprometida o una mala configuración, el despliegue se detiene automáticamente en staging.
+            </p>
+            <div class="p-5 bg-obsidian border border-graphite/30 font-mono text-xs text-linen/70 space-y-2">
+              <div class="text-cashmere">// Puertas de Calidad Automatizadas</div>
+              <div class="text-alabaster">> Análisis estático SAST: Bloqueo de 100% regresiones</div>
+              <div class="text-linen/60">> Firma criptográfica Cosign: Validada</div>
+            </div>
+          </div>
+
+          <div id="step-4" class="step-pane card-monolith p-12 rounded-sm">
+            <span class="telemetry text-cashmere block mb-4">FASE 04 // OPERACIONES</span>
+            <h3 class="font-display text-2xl sm:text-3xl text-alabaster mb-6 font-normal">
+              Resiliencia Autónoma & Uptime 99.999%
+            </h3>
+            <p class="text-linen/80 text-sm leading-relaxed mb-8 font-light">
+              Monitoreo a nivel de kernel mediante eBPF para detectar comportamientos anómalos en tiempo real con overhead cercano a cero. Mecanismos de auto-recuperación y respuesta inmediata garantizada por contrato.
+            </p>
+            <div class="p-5 bg-obsidian border border-graphite/30 font-mono text-xs text-linen/70 space-y-2">
+              <div class="text-cashmere">// Telemetría de Kernel en Vivo</div>
+              <div class="text-alabaster">> Sondas eBPF: 0 incidentes no contenidos</div>
+              <div class="text-linen/60">> Disponibilidad mensual: 99.999%</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. EVIDENCIA & CASOS REALES (PROOF OF WORK) -->
+  <section id="evidencia" class="py-32 border-b border-graphite/30 relative">
+    <div class="max-w-7xl mx-auto px-6 md:px-16">
+      
+      <div class="mb-20 text-center max-w-2xl mx-auto">
+        <span class="telemetry block mb-3">04 // RESULTADOS CUANTIFICABLES</span>
+        <h2 class="font-display text-3xl sm:text-5xl text-alabaster font-normal">
+          Despliegues en Producción
+        </h2>
+      </div>
+
+      <!-- Monumental Metric Strip -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-graphite/30 border border-graphite/30 mb-20">
+        <div class="bg-obsidian p-12 text-center flex flex-col items-center justify-center">
+          <div class="text-5xl sm:text-6xl font-display text-alabaster mb-3 counter" data-target="99.999">0</div>
+          <div class="telemetry text-cashmere mb-2">% SLA DISPONIBILIDAD</div>
+          <p class="text-xs text-linen/60 font-light max-w-xs">Tolerancia comprobada ante caídas completas de centros de datos.</p>
+        </div>
+
+        <div class="bg-obsidian p-12 text-center flex flex-col items-center justify-center">
+          <div class="flex items-baseline justify-center mb-3">
+            <span class="text-5xl sm:text-6xl font-display text-alabaster counter" data-target="45">0</span>
+            <span class="text-2xl font-display text-cashmere ml-1">ms</span>
+          </div>
+          <div class="telemetry text-cashmere mb-2">LATENCIA P99 EN PRODUCCIÓN</div>
+          <p class="text-xs text-linen/60 font-light max-w-xs">Optimizada desde 2400ms tras refactorización distribuida.</p>
+        </div>
+
+        <div class="bg-obsidian p-12 text-center flex flex-col items-center justify-center">
+          <div class="flex items-baseline justify-center mb-3">
+            <span class="text-5xl sm:text-6xl font-display text-alabaster counter" data-target="15">0</span>
+            <span class="text-2xl font-display text-cashmere ml-1">x</span>
+          </div>
+          <div class="telemetry text-cashmere mb-2">FRECUENCIA DE DESPLIEGUES</div>
+          <p class="text-xs text-linen/60 font-light max-w-xs">Automatización sin fallos humanos ni interrupción de servicio.</p>
+        </div>
+      </div>
+
+      <!-- Real Case Studies Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Case 1 -->
+        <div class="card-monolith p-10 rounded-sm">
+          <div class="flex items-center justify-between pb-4 border-b border-graphite/30 mb-6">
+            <span class="telemetry text-cashmere">FINTECH B2B</span>
+            <span class="telemetry text-linen/50">MIGRACIÓN K8S</span>
+          </div>
+          <h3 class="font-display text-2xl text-alabaster mb-4 font-normal">
+            Refactorización de Núcleo Transaccional
+          </h3>
+          <p class="text-linen/75 text-sm leading-relaxed mb-6 font-light">
+            <strong class="text-alabaster font-medium">Problema:</strong> Cuello de botella en base de datos monolítica con picos de latencia de 2400ms y riesgo de colapso en horas de alta concurrencia.<br><br>
+            <strong class="text-alabaster font-medium">Solución:</strong> Arquitectura de microservicios en Kubernetes con particionamiento de datos y clúster Redis distribuido.<br><br>
+            <strong class="text-cashmere font-medium">Resultado:</strong> Latencia p99 reducida a 45ms y disponibilidad sostenida del 99.99% durante 6 meses continuos sin un solo segundo de parada.
+          </p>
+        </div>
+
+        <!-- Case 2 -->
+        <div class="card-monolith p-10 rounded-sm">
+          <div class="flex items-center justify-between pb-4 border-b border-graphite/30 mb-6">
+            <span class="telemetry text-cashmere">HEALTHTECH SAAS</span>
+            <span class="telemetry text-linen/50">AUDITORÍA HIPAA & SOC 2</span>
+          </div>
+          <h3 class="font-display text-2xl text-alabaster mb-4 font-normal">
+            Hardening y Cumplimiento Normativo Clínico
+          </h3>
+          <p class="text-linen/75 text-sm leading-relaxed mb-6 font-light">
+            <strong class="text-alabaster font-medium">Problema:</strong> Riesgo de exposición de datos médicos de pacientes (PII/PHI) y exigencias regulatorias que impedían cerrar contratos con redes hospitalarias.<br><br>
+            <strong class="text-alabaster font-medium">Solución:</strong> Cifrado completo de extremo a extremo con HSM, WAF perimetral y pipeline DevSecOps con firma estricta de código.<br><br>
+            <strong class="text-cashmere font-medium">Resultado:</strong> Certificación HIPAA y SOC 2 alcanzada en 90 días exactos. Cero incidentes críticos post-despliegue.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. CONVERSIÓN & CONTACTO DIRECTO ("¿ESTÁS INTERESADO?") -->
+  <section id="contacto" class="py-36 relative overflow-hidden bg-basalt/20">
+    <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+      
+      <span class="telemetry block mb-4 text-cashmere">05 // PRÓXIMO PASO</span>
+      
+      <h2 class="font-display text-3xl sm:text-5xl text-alabaster mb-6 font-normal leading-tight">
+        ¿Estás listo para blindar tu infraestructura?
+      </h2>
+
+      <p class="text-linen/80 text-base sm:text-lg mb-12 max-w-xl mx-auto font-light leading-relaxed">
+        Hablemos directamente entre ingenieros. Sin ejecutivos comerciales ni intermediarios. Evaluemos tu arquitectura actual y diseñemos un plan de hardening claro.
+      </p>
+
+      <!-- Direct Functional Conversion Actions -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-5">
+        <a href="https://wa.me/573000000000?text=Hola%20AegisInfra,%20quiero%20coordinar%20una%20reuni%C3%B3n%20t%C3%A9cnica%20de%20evaluaci%C3%B3n." 
+           target="_blank" 
+           class="w-full sm:w-auto btn-tactile btn-primary px-9 py-4 rounded font-display tracking-widest text-xs uppercase flex items-center justify-center gap-3">
+          <i class="ph-bold ph-whatsapp-logo text-base"></i>
+          <span>Iniciar Chat en WhatsApp</span>
+        </a>
+
+        <a href="mailto:contacto@aegisinfra.tech?subject=Evaluaci%C3%B3n%20T%C3%A9cnica%20de%20Seguridad" 
+           class="w-full sm:w-auto btn-tactile btn-secondary px-9 py-4 rounded font-mono text-xs telemetry tracking-wider flex items-center justify-center gap-3">
+          <i class="ph ph-envelope-simple text-base text-cashmere"></i>
+          <span>Contactar por Correo</span>
+        </a>
+      </div>
+
+      <div class="mt-12 telemetry text-[10px] text-linen/40">
+        CONFIDENCIALIDAD TOTAL (NDA DISPONIBLE) // RESPUESTA TÉCNICA EN MENOS DE 4 HORAS
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SOVEREIGN FOOTER -->
+  <footer class="py-12 border-t border-graphite/30 text-xs telemetry text-linen/50 bg-obsidian">
+    <div class="max-w-7xl mx-auto px-6 md:px-16 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="w-1.5 h-1.5 bg-cashmere rounded-full"></span>
+        <span class="text-alabaster tracking-wider">AEGIS INFRA SEC//OPS</span>
+        <span>— INGENIERÍA MONOLÍTICA</span>
+      </div>
+      <div>
+        &copy; 2026 AEGIS INFRA. TODOS LOS DERECHOS RESERVADOS.
+      </div>
+    </div>
+  </footer>
+
+  <!-- 3D SCULPTURE & KINETIC ENGINE (THREE.JS & GSAP) -->
+  <script>
+    // 1. THREE.JS MONOLITHIC BASALT SCULPTURE
+    const initSculpture = () => {
+      const container = document.getElementById('canvas-container');
+      if (!container) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.z = 11;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Monolith geometry: Dodecahedron with architectural facets
+      const geometry = new THREE.DodecahedronGeometry(3.1, 0);
+      
+      // Satin basalt mineral material
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x221f1d,
+        roughness: 0.35,
+        metalness: 0.5,
+        flatShading: true,
+      });
+
+      const monolith = new THREE.Mesh(geometry, material);
+      scene.add(monolith);
+
+      // Fine wireframe hairline accents
+      const edges = new THREE.EdgesGeometry(geometry);
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0xb5a49a,
+        transparent: true,
+        opacity: 0.28
+      });
+      const wireframe = new THREE.LineSegments(edges, lineMaterial);
+      monolith.add(wireframe);
+
+      // Warm directional gallery lighting
+      const ambientLight = new THREE.AmbientLight(0x2e2926, 2.2);
+      scene.add(ambientLight);
+
+      // Key light from top right (alabaster bone tone)
+      const keyLight = new THREE.DirectionalLight(0xf1edea, 2.8);
+      keyLight.position.set(6, 6, 4);
+      scene.add(keyLight);
+
+      // Subtle fill light from bottom left (warm taupe cashmere tone)
+      const fillLight = new THREE.DirectionalLight(0xb5a49a, 1.4);
+      fillLight.position.set(-6, -4, 2);
+      scene.add(fillLight);
+
+      // Mouse tracking with heavy mass inertia
+      let mouseX = 0, mouseY = 0;
+      let targetX = 0, targetY = 0;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX - window.innerWidth / 2) * 0.0008;
+        mouseY = (e.clientY - window.innerHeight / 2) * 0.0008;
+      });
+
+      window.addEventListener('resize', () => {
+        if (!container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      });
+
+      const clock = new THREE.Clock();
+      const animate = () => {
+        requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
+
+        targetX += (mouseX - targetX) * 0.04;
+        targetY += (mouseY - targetY) * 0.04;
+
+        monolith.rotation.y += 0.0018;
+        monolith.rotation.x = targetY * 4 + Math.sin(elapsedTime * 0.35) * 0.05;
+        monolith.rotation.z = targetX * 4 + Math.cos(elapsedTime * 0.25) * 0.05;
+        monolith.position.y = Math.sin(elapsedTime * 0.6) * 0.12;
+
+        renderer.render(scene, camera);
+      };
+      animate();
+    };
+
+    // 2. FLASHLIGHT SPECULAR GLOW FOR CARDS
+    const initCardsGlow = () => {
+      document.querySelectorAll('.card-monolith').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        });
+      });
+    };
+
+    // 3. INTERACTIVE STEPPER LOGIC
+    function setStep(targetId, buttonElement) {
+      document.querySelectorAll('.step-nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+
+      buttonElement.classList.add('active');
+      const pane = document.getElementById(targetId);
+      if (pane) pane.classList.add('active');
+    }
+
+    // 4. GSAP COUNTER ROLL-UP
+    window.addEventListener('DOMContentLoaded', () => {
+      gsap.registerPlugin(ScrollTrigger);
+
+      initSculpture();
+      initCardsGlow();
+
+      document.querySelectorAll('.counter').forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const isDecimal = target % 1 !== 0;
+
+        ScrollTrigger.create({
+          trigger: counter,
+          start: 'top 85%',
+          once: true,
+          onEnter: () => {
+            gsap.to(counter, {
+              innerHTML: target,
+              duration: 2.2,
+              ease: 'power2.out',
+              snap: { innerHTML: isDecimal ? 0.001 : 1 },
+              onUpdate: function() {
+                if (isDecimal) {
+                  counter.innerHTML = parseFloat(this.targets()[0].innerHTML).toFixed(3);
+                } else {
+                  counter.innerHTML = Math.round(this.targets()[0].innerHTML);
+                }
+              }
+            });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

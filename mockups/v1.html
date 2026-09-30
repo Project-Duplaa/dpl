@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Core // Ingeniería de Precisión en Seguridad e Infraestructura</title>
+  
+  <!-- Fonts: Syne (Display), DM Sans (Body), IBM Plex Mono (Code/Telemetry) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              void: '#030508',
+              dark: '#05070B',
+              surface: '#090C15',
+              card: 'rgba(11, 15, 26, 0.72)',
+              elevated: 'rgba(18, 24, 38, 0.65)'
+            },
+            titanium: '#E6EDF5',
+            platinum: '#94A3B8',
+            graphite: '#475569',
+            accent: 'var(--accent-primary)',
+            accentSec: 'var(--accent-secondary)'
+          },
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Phosphor Icons Web -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- GSAP & Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <style>
+    :root {
+      --accent-primary: #00D2FF;
+      --accent-secondary: #38BDF8;
+      --accent-rgb: 0, 210, 255;
+      --glow-ambient: rgba(0, 210, 255, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #030508;
+      color: #E6EDF5;
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+      selection-background-color: var(--accent-primary);
+      selection-color: #030508;
+    }
+
+    ::selection {
+      background-color: var(--accent-primary);
+      color: #030508;
+    }
+
+    /* WebGL background canvas */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Subtle procedural grain overlay */
+    .procedural-grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Ambient atmospheric depth lighting */
+    .ambient-glow {
+      position: fixed;
+      width: 700px;
+      height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(var(--accent-rgb), 0.07) 0%, transparent 70%);
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 1;
+      transition: background 0.8s ease;
+    }
+
+    /* Precision Glassmorphism */
+    .glass-card {
+      background: rgba(9, 12, 21, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 12px 40px -10px rgba(0, 0, 0, 0.7);
+      position: relative;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    /* Flashlight effect on interactive cards */
+    .flashlight-card {
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .flashlight-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: radial-gradient(450px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(var(--accent-rgb), 0.45), transparent 60%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 2;
+    }
+
+    .flashlight-card:hover::before {
+      opacity: 1;
+    }
+
+    .flashlight-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(550px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(var(--accent-rgb), 0.04), transparent 60%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 1;
+    }
+
+    .flashlight-card:hover::after {
+      opacity: 1;
+    }
+
+    /* Tactile Buttons */
+    .btn-tactile {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-tactile:active {
+      transform: scale(0.97) translateY(1px);
+    }
+
+    .btn-glow {
+      background: var(--accent-primary);
+      color: #030508;
+      font-weight: 700;
+      box-shadow: 0 0 25px rgba(var(--accent-rgb), 0.35);
+    }
+
+    .btn-glow:hover {
+      box-shadow: 0 0 35px rgba(var(--accent-rgb), 0.55);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(14, 18, 30, 0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* Live Telemetry Beacon */
+    .beacon {
+      animation: beaconPulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    @keyframes beaconPulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(2.2); opacity: 0; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    /* Step Sequence line */
+    .sequence-line {
+      position: absolute;
+      top: 24px;
+      left: 19px;
+      bottom: 24px;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 0;
+    }
+
+    .sequence-line-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to bottom, var(--accent-primary), var(--accent-secondary));
+      transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Theme pill dots */
+    .theme-chip {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    }
+    .theme-chip:hover {
+      transform: scale(1.35);
+    }
+    .theme-chip.active {
+      transform: scale(1.25);
+      box-shadow: 0 0 10px currentColor;
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <!-- Background WebGL & Grain -->
+  <div id="canvas-container"></div>
+  <div class="procedural-grain"></div>
+  <div class="ambient-glow -top-40 -left-40" id="glow-1"></div>
+  <div class="ambient-glow top-1/2 -right-60" id="glow-2"></div>
+
+  <!-- NAVIGATION HEADER -->
+  <header class="fixed top-0 left-0 w-full z-50 py-4 px-6 md:px-12 transition-all duration-300" id="main-header">
+    <div class="max-w-7xl mx-auto flex items-center justify-between glass-card px-6 py-3.5 rounded-xl border-white/[0.08]">
+      
+      <!-- Brand Mark -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-8 h-8 rounded-md border border-white/10 bg-obsidian-surface flex items-center justify-center text-accent group-hover:border-accent transition-colors">
+          <i class="ph-duotone ph-shield-check text-xl"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-display font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
+            AEGIS<span class="text-accent">CORE</span>
+            <span class="text-[9px] font-mono px-1.5 py-0.2 rounded border border-white/10 text-platinum">SEC//OPS</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Quick Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-xs font-mono tracking-wider uppercase text-platinum">
+        <a href="#quienes-somos" class="hover:text-accent transition-colors">Quiénes Somos</a>
+        <a href="#servicios" class="hover:text-accent transition-colors">Qué Hacemos</a>
+        <a href="#flujo" class="hover:text-accent transition-colors">Metodología</a>
+        <a href="#casos" class="hover:text-accent transition-colors">Casos Reales</a>
+        <a href="#contacto" class="hover:text-accent transition-colors">Contacto</a>
+      </nav>
+
+      <!-- Theme Switcher & Status -->
+      <div class="flex items-center gap-4">
+        <!-- Live Status Pill -->
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/40 text-[11px] font-mono text-platinum">
+          <span class="relative flex h-2 w-2">
+            <span class="beacon absolute inline-flex h-full w-full rounded-full bg-emerald-400"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>99.999% SLA</span>
+        </div>
+
+        <!-- Luminescence Switcher -->
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/10 bg-obsidian-void/70">
+          <div class="theme-chip active bg-[#00D2FF]" title="Cian Eléctrico" onclick="changeTheme('#00D2FF', '#38BDF8', '0, 210, 255', this)"></div>
+          <div class="theme-chip bg-[#F59E0B]" title="Ámbar Táctico" onclick="changeTheme('#F59E0B', '#FBBF24', '245, 158, 11', this)"></div>
+          <div class="theme-chip bg-[#8B5CF6]" title="Violeta Láser" onclick="changeTheme('#8B5CF6', '#A78BFA', '139, 92, 246', this)"></div>
+          <div class="theme-chip bg-[#10B981]" title="Esmeralda Seguro" onclick="changeTheme('#10B981', '#34D399', '16, 185, 129', this)"></div>
+        </div>
+
+        <!-- Fast Contact CTA -->
+        <a href="#contacto" class="hidden sm:inline-flex btn-tactile btn-glow text-xs uppercase px-4 py-2 rounded font-display tracking-wider">
+          Hablemos
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <main class="relative z-10 w-full flex flex-col items-center">
+
+    <!-- 1. HERO SECTION (MONUMENTAL STAGE + 3D CORE) -->
+    <section id="hero" class="min-h-screen w-full flex flex-col justify-center items-center px-6 pt-32 pb-20 max-w-7xl mx-auto relative">
+      
+      <!-- Operational Telemetry Eyebrow -->
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-white/[0.08] bg-obsidian-surface/60 backdrop-blur-xl mb-8">
+        <span class="relative flex h-2 w-2">
+          <span class="beacon absolute inline-flex h-full w-full rounded-full bg-accent"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+        </span>
+        <span class="font-mono text-xs text-titanium tracking-widest uppercase">
+          HARDENED INFRASTRUCTURE // ZERO-TRUST PARADIGM
+        </span>
+      </div>
+
+      <!-- Monumental Headline -->
+      <div class="text-center max-w-4xl mx-auto mb-8">
+        <h1 class="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-white mb-6">
+          Ingeniería de Precisión para <br class="hidden sm:inline">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentSec to-white">
+            Infraestructura Crítica
+          </span>
+        </h1>
+        <p class="font-body text-base sm:text-lg md:text-xl text-platinum max-w-2xl mx-auto leading-relaxed font-normal">
+          Diseñamos, auditamos y escalamos sistemas distribuidos de alta concurrencia. Sin intermediarios comerciales, sin falsas promesas. Solo ingeniería rigurosa para directores técnicos y CISOs.
+        </p>
+      </div>
+
+      <!-- Primary Action Buttons (Conversion Ready) -->
+      <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-16 w-full sm:w-auto">
+        <a href="https://wa.me/573000000000?text=Hola%20AegisCore,%20estoy%20interesado%20en%20auditar%20y%20blindar%20mi%20infraestructura." 
+           target="_blank" 
+           class="w-full sm:w-auto btn-tactile btn-glow px-8 py-4 rounded-lg flex items-center justify-center gap-3 font-display text-sm tracking-wide">
+          <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+          <span>INICIAR CHAT EN WHATSAPP</span>
+        </a>
+        <a href="mailto:ingenieria@aegiscore.tech?subject=Consulta%20T%C3%A9cnica%20de%20Infraestructura" 
+           class="w-full sm:w-auto btn-tactile btn-outline px-8 py-4 rounded-lg flex items-center justify-center gap-3 font-mono text-sm tracking-wide text-titanium">
+          <i class="ph ph-envelope-simple text-xl text-accent"></i>
+          <span>ENVIAR CORREO TÉCNICO</span>
+        </a>
+      </div>
+
+      <!-- Interactive 3D Status Dock -->
+      <div class="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+        <div class="glass-card p-4 rounded-lg border-white/[0.05]">
+          <div class="text-[10px] font-mono text-platinum uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="ph ph-shield-check text-accent"></i> POSTURA ZERO-TRUST
+          </div>
+          <div class="text-xl font-mono font-bold text-white">ENFORCED</div>
+          <div class="text-[11px] text-graphite font-mono mt-0.5">mTLS + Microsegmentación</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-lg border-white/[0.05]">
+          <div class="text-[10px] font-mono text-platinum uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="ph ph-activity text-accent"></i> UPTIME EN PRODUCCIÓN
+          </div>
+          <div class="text-xl font-mono font-bold text-accent">99.999%</div>
+          <div class="text-[11px] text-graphite font-mono mt-0.5">Multi-Región Activo-Activo</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-lg border-white/[0.05]">
+          <div class="text-[10px] font-mono text-platinum uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="ph ph-gauge text-accent"></i> LATENCIA DE EDGE
+          </div>
+          <div class="text-xl font-mono font-bold text-white">&lt; 15ms</div>
+          <div class="text-[11px] text-graphite font-mono mt-0.5">Anycast DNS + Edge Compute</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-lg border-white/[0.05]">
+          <div class="text-[10px] font-mono text-platinum uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="ph ph-lock-key text-accent"></i> CUMPLIMIENTO GLOBAL
+          </div>
+          <div class="text-xl font-mono font-bold text-white">ISO // SOC2</div>
+          <div class="text-[11px] text-graphite font-mono mt-0.5">HIPAA & PCI-DSS Ready</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. QUIÉNES SOMOS (MANIFIESTO TÉCNICO) -->
+    <section id="quienes-somos" class="w-full py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.06]">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-5">
+          <div class="text-xs font-mono text-accent uppercase tracking-widest mb-3">01 // QUIÉNES SOMOS</div>
+          <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-white mb-6 leading-tight">
+            No somos una agencia más. <br>
+            Somos tu unidad de operaciones de ingeniería táctica.
+          </h2>
+          <div class="space-y-4 text-platinum text-sm leading-relaxed">
+            <p>
+              Nacimos para erradicar el abismo entre el desarrollo ágil y la seguridad inquebrantable. Mientras el mercado ofrece soluciones empaquetadas que colapsan ante auditorías serias, nosotros construimos infraestructura determinista y blindada desde el primer commit.
+            </p>
+            <p>
+              Trabajamos mano a mano con CTOs, CISOs y directores de ingeniería de empresas fintech, healthtech y plataformas transaccionales masivas que no pueden permitirse ni un segundo de downtime ni una sola brecha de datos.
+            </p>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-white/[0.06] flex items-center gap-6">
+            <div>
+              <div class="font-mono text-2xl font-bold text-accent">100%</div>
+              <div class="text-xs font-mono text-platinum">Código Inmutable (IaC)</div>
+            </div>
+            <div class="w-px h-10 bg-white/10"></div>
+            <div>
+              <div class="font-mono text-2xl font-bold text-accent">0s</div>
+              <div class="text-xs font-mono text-platinum">Downtime en Despliegues</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Architecture Inspector -->
+        <div class="lg:col-span-7">
+          <div class="glass-card rounded-xl overflow-hidden border-white/[0.08] shadow-2xl">
+            <!-- Terminal Header -->
+            <div class="bg-obsidian-void px-4 py-3 border-b border-white/[0.06] flex items-center justify-between text-xs font-mono">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+                <span class="ml-2 text-platinum/70">aegis-defense-kernel // audit.log</span>
+              </div>
+              <span class="text-accent text-[11px]">ACTIVE ENCLAVE</span>
+            </div>
+            
+            <!-- Terminal Body -->
+            <div class="p-6 font-mono text-xs space-y-3 bg-[#05070d]/90 text-platinum overflow-x-auto leading-relaxed">
+              <div class="text-graphite">// Initializing cryptographic verification mesh...</div>
+              <div><span class="text-accent">$</span> aegis verify --target cluster.prod.internal --strict</div>
+              <div class="text-emerald-400">✓ Enclave attestation valid: Hardware TPM 2.0 verified</div>
+              <div class="text-emerald-400">✓ eBPF runtime probes attached: 0 kernel bypasses detected</div>
+              <div class="text-emerald-400">✓ Network policy: Default-Deny ingress/egress applied</div>
+              <div class="text-emerald-400">✓ Secrets engine: Dynamic rotation TTL 15m (Vault KVv2)</div>
+              <div class="pt-2 text-white flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-accent animate-ping"></span>
+                <span>STATUS: Zero-Vulnerabilities. All 65,535 perimeter vectors fortified.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. QUÉ HACEMOS (BENTO GRID CON 3D TILT & FLASHLIGHT) -->
+    <section id="servicios" class="w-full py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.06]">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-16">
+        <div>
+          <div class="text-xs font-mono text-accent uppercase tracking-widest mb-3">02 // QUÉ HACEMOS</div>
+          <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white">Capacidades Core de Ingeniería</h2>
+        </div>
+        <p class="text-platinum text-sm font-mono mt-4 md:mt-0 max-w-sm">
+          Arquitectura, seguridad ofensiva/defensiva y automatización orquestada bajo estándares militares.
+        </p>
+      </div>
+
+      <!-- Bento Grid Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Card 1: Arquitectura Resiliente (Span 7) -->
+        <div class="md:col-span-7 glass-card flashlight-card p-8 rounded-xl flex flex-col justify-between min-h-[360px]">
+          <div>
+            <div class="w-12 h-12 rounded-lg border border-white/10 bg-obsidian-void flex items-center justify-center text-accent mb-6">
+              <i class="ph-duotone ph-graph text-2xl"></i>
+            </div>
+            <div class="text-xs font-mono text-accent uppercase mb-2">INFRAESTRUCTURA & CLOUD</div>
+            <h3 class="font-display font-bold text-2xl text-white mb-4">Arquitecturas Distribuidas & Kubernetes</h3>
+            <p class="text-platinum text-sm leading-relaxed mb-6">
+              Diseño e implementación de clusters tolerantes a particiones de red. Orquestación con Terraform, Helm y ArgoCD para despliegues inmutables GitOps multirregión con failover automático en milisegundos.
+            </p>
+          </div>
+
+          <div class="pt-6 border-t border-white/[0.06] flex flex-wrap items-center gap-3 text-xs font-mono text-platinum">
+            <span class="px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">Kubernetes BareMetal/EKS</span>
+            <span class="px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">Terraform IaC</span>
+            <span class="px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">Istio Service Mesh</span>
+          </div>
+        </div>
+
+        <!-- Card 2: DevSecOps (Span 5) -->
+        <div class="md:col-span-5 glass-card flashlight-card p-8 rounded-xl flex flex-col justify-between min-h-[360px]">
+          <div>
+            <div class="w-12 h-12 rounded-lg border border-white/10 bg-obsidian-void flex items-center justify-center text-accent mb-6">
+              <i class="ph-duotone ph-infinity text-2xl"></i>
+            </div>
+            <div class="text-xs font-mono text-accent uppercase mb-2">AUTOMATIZACIÓN CI/CD</div>
+            <h3 class="font-display font-bold text-2xl text-white mb-4">DevSecOps & Supply Chain Security</h3>
+            <p class="text-platinum text-sm leading-relaxed mb-6">
+              Inyección de análisis estático (SAST) y dinámico (DAST), firma criptográfica de contenedores (Sigstore/Cosign) y bloqueo automático de regresiones de seguridad antes de tocar staging.
+            </p>
+          </div>
+
+          <div class="pt-6 border-t border-white/[0.06] flex flex-wrap items-center gap-2 text-xs font-mono text-platinum">
+            <span class="px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">GitHub Actions Hardened</span>
+            <span class="px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">Trivy / Snyk / Semgrep</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Hardening & Auditorías Forenses (Span 12) -->
+        <div class="md:col-span-12 glass-card flashlight-card p-8 rounded-xl flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
+          <div class="max-w-2xl">
+            <div class="w-12 h-12 rounded-lg border border-white/10 bg-obsidian-void flex items-center justify-center text-accent mb-6">
+              <i class="ph-duotone ph-shield-check text-2xl"></i>
+            </div>
+            <div class="text-xs font-mono text-accent uppercase mb-2">SEGURIDAD OFENSIVA & DEFENSIVA</div>
+            <h3 class="font-display font-bold text-2xl sm:text-3xl text-white mb-4">Hardening de Sistemas & Auditorías Forenses</h3>
+            <p class="text-platinum text-sm leading-relaxed">
+              Auditorías de código fuente de caja blanca, pruebas de penetración avanzadas, bastionado de servidores Linux conforme a CIS Benchmarks nivel 2 y remediación técnica directa sin reportes teóricos inútiles.
+            </p>
+          </div>
+
+          <div class="w-full lg:w-80 glass-card p-5 rounded-lg border-white/[0.06] bg-obsidian-void/60 text-xs font-mono space-y-3">
+            <div class="text-white font-bold pb-2 border-b border-white/[0.06] flex items-center justify-between">
+              <span>ESTÁNDARES APLICADOS</span>
+              <i class="ph ph-check-circle text-emerald-400"></i>
+            </div>
+            <div class="flex justify-between text-platinum">
+              <span>CIS Benchmarks L2</span>
+              <span class="text-emerald-400">100% Pass</span>
+            </div>
+            <div class="flex justify-between text-platinum">
+              <span>ISO/IEC 27001</span>
+              <span class="text-accent">Aligned</span>
+            </div>
+            <div class="flex justify-between text-platinum">
+              <span>OWASP Top 10 API</span>
+              <span class="text-emerald-400">Mitigated</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 4. METODOLOGÍA & FLUJO SECUENCIAL INTERACTIVO -->
+    <section id="flujo" class="w-full py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.06]">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <div class="text-xs font-mono text-accent uppercase tracking-widest mb-3">03 // CÓMO TRABAJAMOS</div>
+        <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white mb-4">
+          El Ciclo de Blindaje & Despliegue
+        </h2>
+        <p class="text-platinum text-sm sm:text-base">
+          Una secuencia de ejecución matemática diseñada para transformar arquitecturas vulnerables en bastiones inexpugnables.
+        </p>
+      </div>
+
+      <!-- Interactive Stepper Flow -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Stepper Navigation Buttons -->
+        <div class="lg:col-span-5 space-y-3" id="step-nav-container">
+          
+          <button onclick="selectStep(0)" class="step-btn active w-full text-left p-5 rounded-xl border border-white/[0.08] glass-card transition-all cursor-pointer group">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs text-accent font-semibold tracking-wider">FASE 01 // AUDITORÍA</span>
+              <i class="ph ph-arrow-right text-accent opacity-0 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+            <h4 class="font-display font-bold text-lg text-white group-hover:text-accent transition-colors">Diagnóstico de Superficie de Ataque</h4>
+            <p class="text-xs text-platinum mt-1">Mapeo exhaustivo de endpoints, puertos expuestos, dependencias y deuda técnica.</p>
+          </button>
+
+          <button onclick="selectStep(1)" class="step-btn w-full text-left p-5 rounded-xl border border-white/[0.08] glass-card transition-all cursor-pointer group">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs text-platinum font-semibold tracking-wider">FASE 02 // ARQUITECTURA</span>
+              <i class="ph ph-arrow-right text-accent opacity-0 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+            <h4 class="font-display font-bold text-lg text-white group-hover:text-accent transition-colors">Diseño de Topología Inmutable</h4>
+            <p class="text-xs text-platinum mt-1">Modelado en Terraform con aislamiento de red, zero-trust y clustering distribuido.</p>
+          </button>
+
+          <button onclick="selectStep(2)" class="step-btn w-full text-left p-5 rounded-xl border border-white/[0.08] glass-card transition-all cursor-pointer group">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs text-platinum font-semibold tracking-wider">FASE 03 // AUTOMATIZACIÓN</span>
+              <i class="ph ph-arrow-right text-accent opacity-0 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+            <h4 class="font-display font-bold text-lg text-white group-hover:text-accent transition-colors">Pipeline DevSecOps Blindado</h4>
+            <p class="text-xs text-platinum mt-1">Pruebas estáticas, verificación de secretos y análisis dinámico continuo.</p>
+          </button>
+
+          <button onclick="selectStep(3)" class="step-btn w-full text-left p-5 rounded-xl border border-white/[0.08] glass-card transition-all cursor-pointer group">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-mono text-xs text-platinum font-semibold tracking-wider">FASE 04 // OPERACIÓN</span>
+              <i class="ph ph-arrow-right text-accent opacity-0 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+            <h4 class="font-display font-bold text-lg text-white group-hover:text-accent transition-colors">Resiliencia Autónoma & SLA 99.999%</h4>
+            <p class="text-xs text-platinum mt-1">Telemetría distribuida eBPF, auto-healing de nodos y soporte ante incidentes.</p>
+          </button>
+
+        </div>
+
+        <!-- Right: Step Dynamic Deep Dive View -->
+        <div class="lg:col-span-7 glass-card p-8 rounded-xl border-white/[0.08] min-h-[440px] flex flex-col justify-between" id="step-detail-panel">
+          <div>
+            <div class="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-6">
+              <span class="font-mono text-xs text-accent font-semibold tracking-widest" id="step-phase-badge">DETALLE DE EJECUCIÓN // FASE 01</span>
+              <span class="text-xs font-mono text-platinum flex items-center gap-1.5">
+                <i class="ph ph-cpu text-accent"></i> PROTOCOLO DE PRECISIÓN
+              </span>
+            </div>
+
+            <h3 class="font-display font-bold text-2xl text-white mb-4" id="step-title">
+              Inspección Forense y Mapeo de Vectores Críticos
+            </h3>
+
+            <p class="text-platinum text-sm leading-relaxed mb-6" id="step-desc">
+              Analizamos cada capa de la pila tecnológica: desde el código fuente y las configuraciones de contenedores hasta las reglas de firewall y políticas IAM en la nube. Entregamos un plano exacto de brechas con prioridad basada en impacto financiero y operativo.
+            </p>
+
+            <div class="glass-card p-5 rounded-lg border-white/[0.06] bg-obsidian-void/80 font-mono text-xs space-y-2 mb-6" id="step-code-preview">
+              <div class="text-accent">// Salida del escaneo inicial</div>
+              <div class="text-white">> Evaluando 142 microservicios en malla Kubernetes...</div>
+              <div class="text-emerald-400">> 38 políticas de red restrictivas autogeneradas.</div>
+              <div class="text-platinum">> Mitigación inmediata de 4 puertos con exposición pública innecesaria.</div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-platinum">
+            <span>DURACIÓN TÍPICA: <strong class="text-white">5 - 10 DÍAS</strong></span>
+            <span class="text-accent flex items-center gap-1">CERO INTERRUPCIÓN <i class="ph ph-check"></i></span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 5. CASOS REALES & MÉTRICAS (PROOF OF WORK) -->
+    <section id="casos" class="w-full py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.06]">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <div class="text-xs font-mono text-accent uppercase tracking-widest mb-3">04 // EVIDENCIA EN PRODUCCIÓN</div>
+        <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white mb-4">
+          Resultados Cuantificables
+        </h2>
+        <p class="text-platinum text-sm sm:text-base">
+          Proyectos reales de ingeniería ejecutados bajo condiciones de alta presión y cero margen de error.
+        </p>
+      </div>
+
+      <!-- Big Metric Badges -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        
+        <div class="glass-card p-8 rounded-xl text-center border-white/[0.08]">
+          <div class="font-mono text-5xl sm:text-6xl font-extrabold text-accent mb-3 flex items-center justify-center">
+            <span class="counter" data-target="99.999">0</span>%
+          </div>
+          <div class="font-display font-bold text-white text-lg mb-2">Disponibilidad en Producción</div>
+          <p class="text-platinum text-xs font-mono">Arquitecturas multirregión con tolerancia activa a caídas completas de proveedores de nube.</p>
+        </div>
+
+        <div class="glass-card p-8 rounded-xl text-center border-white/[0.08]">
+          <div class="font-mono text-5xl sm:text-6xl font-extrabold text-white mb-3 flex items-center justify-center">
+            <span class="counter" data-target="45">0</span><span class="text-accent">ms</span>
+          </div>
+          <div class="font-display font-bold text-white text-lg mb-2">Latencia p99 Garantizada</div>
+          <p class="text-platinum text-xs font-mono">De 2400ms a 45ms en base de datos monolítica tras refactorización distribuida.</p>
+        </div>
+
+        <div class="glass-card p-8 rounded-xl text-center border-white/[0.08]">
+          <div class="font-mono text-5xl sm:text-6xl font-extrabold text-accent mb-3 flex items-center justify-center">
+            <span class="counter" data-target="15">0</span><span class="text-white">x</span>
+          </div>
+          <div class="font-display font-bold text-white text-lg mb-2">Frecuencia de Despliegue Seguro</div>
+          <p class="text-platinum text-xs font-mono">De 1 pase manual semanal a 15 despliegues automatizados diarios sin regresiones.</p>
+        </div>
+
+      </div>
+
+      <!-- Real Case Study Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Case 1 -->
+        <div class="glass-card flashlight-card p-8 rounded-xl border-white/[0.08]">
+          <div class="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-6">
+            <span class="text-xs font-mono text-accent font-semibold tracking-wider">SECTOR // FINTECH B2B</span>
+            <span class="text-xs font-mono text-platinum">KUBERNETES SHARDING</span>
+          </div>
+          <h3 class="font-display font-bold text-xl sm:text-2xl text-white mb-3">
+            Refactorización de Núcleo Transaccional Bancario
+          </h3>
+          <p class="text-platinum text-sm leading-relaxed mb-6">
+            <strong class="text-white font-medium">Problema:</strong> Cuello de botella en base de datos PostgreSQL monolítica provocando bloqueos y tiempos de espera de 2.4 segundos en hora pico.<br><br>
+            <strong class="text-white font-medium">Solución:</strong> Migración a microservicios en Kubernetes con particionamiento (sharding) horizontal, réplicas de lectura y caché distribuido Redis en clúster.<br><br>
+            <strong class="text-accent font-medium">Resultado:</strong> Latencia p99 reducida en un 98% (45ms). Disponibilidad del 100% durante los 6 meses posteriores al despliegue.
+          </p>
+          <div class="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-platinum">
+            <span>CLIENTE: PLATAFORMA DE PAGOS</span>
+            <span class="text-emerald-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> VERIFICADO</span>
+          </div>
+        </div>
+
+        <!-- Case 2 -->
+        <div class="glass-card flashlight-card p-8 rounded-xl border-white/[0.08]">
+          <div class="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-6">
+            <span class="text-xs font-mono text-accent font-semibold tracking-wider">SECTOR // HEALTHTECH SAAS</span>
+            <span class="text-xs font-mono text-platinum">HIPAA & SOC 2 HARDENING</span>
+          </div>
+          <h3 class="font-display font-bold text-xl sm:text-2xl text-white mb-3">
+            Blindaje y Acreditación de Seguridad Clínica
+          </h3>
+          <p class="text-platinum text-sm leading-relaxed mb-6">
+            <strong class="text-white font-medium">Problema:</strong> Riesgo de fuga de información de pacientes (PII/PHI) y observaciones críticas que bloqueaban la entrada a clientes institucionales de gran escala.<br><br>
+            <strong class="text-white font-medium">Solución:</strong> Cifrado de datos en reposo y en tránsito con claves rotativas HSM (AES-256), WAF perimetral y pipeline DevSecOps con verificación pre-commit.<br><br>
+            <strong class="text-accent font-medium">Resultado:</strong> Certificación HIPAA y SOC 2 aprobada en 90 días. Cero incidentes de seguridad registrados.
+          </p>
+          <div class="pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-platinum">
+            <span>CLIENTE: GESTIÓN HOSPITALARIA</span>
+            <span class="text-emerald-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> VERIFICADO</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 6. CONTACTO & CONVERSIÓN ("¿ESTÁS INTERESADO?") -->
+    <section id="contacto" class="w-full py-28 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.06]">
+      
+      <div class="glass-card p-10 sm:p-16 rounded-2xl border-white/[0.1] text-center relative overflow-hidden shadow-2xl">
+        <!-- Ambient radial glow behind card -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(var(--accent-rgb),0.12)_0%,_transparent_70%)] pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-2xl mx-auto">
+          <div class="w-16 h-16 rounded-2xl border border-white/10 bg-obsidian-void flex items-center justify-center text-accent text-3xl mx-auto mb-6 shadow-lg">
+            <i class="ph-duotone ph-chats-circle"></i>
+          </div>
+
+          <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white mb-6">
+            ¿Estás listo para blindar tu infraestructura?
+          </h2>
+
+          <p class="font-body text-base sm:text-lg text-platinum mb-10 leading-relaxed">
+            Hablemos directamente entre ingenieros. Sin presentaciones comerciales aburridas ni compromisos forzados. Evaluemos tu arquitectura y diseñemos una ruta clara de hardening.
+          </p>
+
+          <!-- High-Converting Direct Actions -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+            <a href="https://wa.me/573000000000?text=Hola%20AegisCore,%20quiero%20coordinar%20una%20sesi%C3%B3n%20t%C3%A9cnica%20de%20diagn%C3%B3stico." 
+               target="_blank" 
+               class="w-full sm:w-auto btn-tactile btn-glow px-8 py-4 rounded-lg flex items-center justify-center gap-3 font-display text-sm tracking-wide">
+              <i class="ph-bold ph-whatsapp-logo text-xl"></i>
+              <span>INICIAR CHAT EN WHATSAPP</span>
+            </a>
+            
+            <a href="mailto:contacto@aegiscore.tech?subject=Solicitud%20de%20Diagn%C3%B3stico%20de%20Seguridad" 
+               class="w-full sm:w-auto btn-tactile btn-outline px-8 py-4 rounded-lg flex items-center justify-center gap-3 font-mono text-sm tracking-wide text-titanium">
+              <i class="ph ph-envelope-simple text-xl text-accent"></i>
+              <span>CONTACTAR POR CORREO</span>
+            </a>
+          </div>
+
+          <div class="mt-10 text-xs font-mono text-graphite flex items-center justify-center gap-4">
+            <span class="flex items-center gap-1.5">
+              <i class="ph-fill ph-lock-key text-accent"></i> Acuerdos de Confidencialidad (NDA) disponibles
+            </span>
+            <span class="hidden sm:inline">•</span>
+            <span class="hidden sm:inline">Respuesta en menos de 4 horas hábiles</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- SOVEREIGN FOOTER -->
+  <footer class="w-full py-12 px-6 md:px-12 border-t border-white/[0.06] bg-obsidian-void relative z-10 text-xs font-mono text-platinum">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded border border-white/10 bg-obsidian-surface flex items-center justify-center text-accent">
+          <i class="ph-bold ph-shield-check"></i>
+        </div>
+        <span class="font-display font-bold text-white tracking-wider">AEGIS CORE SEC//OPS</span>
+        <span class="text-graphite">|</span>
+        <span class="text-graphite">INGENIERÍA DE ALTA PRECISIÓN</span>
+      </div>
+
+      <div class="flex items-center gap-6">
+        <span class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>TODOS LOS SISTEMAS OPERATIVOS</span>
+        </span>
+        <span class="text-graphite">•</span>
+        <span>&copy; 2026 AEGIS CORE TECH.</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- SCRIPT ENGINE: THREE.JS SPATIAL 3D CORE + GSAP + INTERACTION -->
+  <script>
+    // 1. DYNAMIC THEME SYSTEM
+    function changeTheme(primaryHex, secondaryHex, rgbStr, element) {
+      document.documentElement.style.setProperty('--accent-primary', primaryHex);
+      document.documentElement.style.setProperty('--accent-secondary', secondaryHex);
+      document.documentElement.style.setProperty('--accent-rgb', rgbStr);
+
+      document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('active'));
+      if (element) element.classList.add('active');
+
+      // Update Three.js wireframe color
+      if (window.coreMaterial) {
+        window.coreMaterial.color.setHex(primaryHex.replace('#', '0x'));
+      }
+      if (window.coreParticles) {
+        window.coreParticles.material.color.setHex(primaryHex.replace('#', '0x'));
+      }
+    }
+
+    // 2. THREE.JS SPATIAL 3D ARCHITECTURAL CORE
+    const init3DScene = () => {
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 45;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Group holding the 3D Monolith Core
+      const coreGroup = new THREE.Group();
+      scene.add(coreGroup);
+
+      // Monolithic Geometric Core: Icosahedron / Geodesic Wireframe
+      const coreGeo = new THREE.IcosahedronGeometry(14, 2);
+      window.coreMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00D2FF,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.14
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, window.coreMaterial);
+      coreGroup.add(coreMesh);
+
+      // Inner Solid Defense Core (Octahedron)
+      const innerGeo = new THREE.OctahedronGeometry(6, 1);
+      const innerMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.08
+      });
+      const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+      coreGroup.add(innerMesh);
+
+      // Particle halo
+      const pCount = 180;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(pCount * 3);
+      for(let i=0; i<pCount*3; i+=3) {
+        const radius = 22 + Math.random() * 12;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        pPos[i] = radius * Math.sin(phi) * Math.cos(theta);
+        pPos[i+1] = radius * Math.sin(phi) * Math.sin(theta);
+        pPos[i+2] = radius * Math.cos(phi);
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      
+      const pMat = new THREE.PointsMaterial({
+        color: 0x00D2FF,
+        size: 0.9,
+        transparent: true,
+        opacity: 0.4
+      });
+      window.coreParticles = new THREE.Points(pGeo, pMat);
+      coreGroup.add(window.coreParticles);
+
+      // Mouse tracking with fluid inertia
+      let mouseX = 0, mouseY = 0;
+      let targetX = 0, targetY = 0;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX - window.innerWidth / 2) * 0.0012;
+        mouseY = (e.clientY - window.innerHeight / 2) * 0.0012;
+      });
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Animate Loop
+      const clock = new THREE.Clock();
+      const render = () => {
+        requestAnimationFrame(render);
+        const delta = clock.getDelta();
+
+        // Smooth rotation
+        coreMesh.rotation.y += 0.003;
+        coreMesh.rotation.x += 0.0015;
+        innerMesh.rotation.y -= 0.005;
+        innerMesh.rotation.z += 0.002;
+        window.coreParticles.rotation.y += 0.001;
+
+        // Mouse Parallax easing
+        targetX += (mouseX - targetX) * 0.06;
+        targetY += (mouseY - targetY) * 0.06;
+
+        coreGroup.rotation.y = targetX * 8;
+        coreGroup.rotation.x = targetY * 8;
+
+        // Slight scroll reactive shift
+        const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+        coreGroup.position.y = -scrollPercent * 15;
+
+        renderer.render(scene, camera);
+      };
+      render();
+    };
+
+    // 3. FLASHLIGHT MOUSE TRACKING & 3D CARD TILT
+    const initCards3D = () => {
+      const cards = document.querySelectorAll('.flashlight-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          // Inject flashlight position
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+
+          // 3D Tilt calculation (subtle, non-disorienting)
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateX = ((y - centerY) / centerY) * -4.5;
+          const rotateY = ((x - centerX) / centerX) * 4.5;
+
+          gsap.to(card, {
+            rotateX: rotateX,
+            rotateY: rotateY,
+            transformPerspective: 1000,
+            duration: 0.35,
+            ease: "power2.out"
+          });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, {
+            rotateX: 0,
+            rotateY: 0,
+            duration: 0.5,
+            ease: "power3.out"
+          });
+        });
+      });
+    };
+
+    // 4. INTERACTIVE STEPPER LOGIC
+    const stepData = [
+      {
+        badge: "DETALLE DE EJECUCIÓN // FASE 01",
+        title: "Inspección Forense y Mapeo de Vectores Críticos",
+        desc: "Analizamos cada capa de la pila tecnológica: desde el código fuente y las configuraciones de contenedores hasta las reglas de firewall y políticas IAM en la nube. Entregamos un plano exacto de brechas con prioridad basada en impacto financiero y operativo.",
+        preview: [
+          "// Salida del escaneo inicial",
+          "> Evaluando 142 microservicios en malla Kubernetes...",
+          "> 38 políticas de red restrictivas autogeneradas.",
+          "> Mitigación inmediata de 4 puertos con exposición pública innecesaria."
+        ],
+        duration: "5 - 10 DÍAS"
+      },
+      {
+        badge: "DETALLE DE EJECUCIÓN // FASE 02",
+        title: "Diseño de Topología Inmutable y Zero-Trust",
+        desc: "Refactorizamos toda la infraestructura en código reproducible con Terraform. Implementamos microsegmentación estricta y redes de confianza cero: cada comunicación interna entre servicios requiere autenticación mutua TLS (mTLS).",
+        preview: [
+          "// Terraform Plan Verification",
+          "> terraform plan -out=production_hardened.tfplan",
+          "> Modules: 14 applied. Drift detected: 0.00%",
+          "> Ingress controllers fortified with rate-limiting & WAF."
+        ],
+        duration: "2 - 3 SEMANAS"
+      },
+      {
+        badge: "DETALLE DE EJECUCIÓN // FASE 03",
+        title: "Pipeline DevSecOps con Bloqueo de Regresiones",
+        desc: "Automatizamos la seguridad dentro de tu flujo habitual de GitHub o GitLab. Si un desarrollador introduce una dependencia vulnerable, una clave hardcodeada o un fallo de inyección, el pipeline bloquea el merge y ofrece la solución exacta.",
+        preview: [
+          "// CI/CD Pipeline Gating",
+          "> SAST Engine: Semgrep security rules -> 0 High/Crit issues",
+          "> Container Scan: Cosign signature verified with KMS key",
+          "> Deployment: Canary 10% -> 50% -> 100% with auto-rollback."
+        ],
+        duration: "1 - 2 SEMANAS"
+      },
+      {
+        badge: "DETALLE DE EJECUCIÓN // FASE 04",
+        title: "Resiliencia Autónoma, Monitoreo eBPF y SLA 99.999%",
+        desc: "Monitoreo a nivel de kernel con eBPF para detectar anomalías en tiempo real sin degradar el rendimiento de la CPU. Auto-healing de pods y nodos con escalabilidad predictiva para absorber picos repentinos de tráfico.",
+        preview: [
+          "// Live Kernel Telemetry",
+          "> eBPF Tracepoint: sys_enter_connect -> 0 anomalies detected",
+          "> Cluster Health: 100% Nodes Healthy. Latency p99: 14.2ms",
+          "> SLA Availability Clock: 99.9992% rolling 90 days."
+        ],
+        duration: "MONITOREO CONTINUO"
+      }
+    ];
+
+    function selectStep(index) {
+      const buttons = document.querySelectorAll('.step-btn');
+      buttons.forEach((b, i) => {
+        b.classList.toggle('active', i === index);
+        const dot = b.querySelector('.font-mono span');
+        if (i === index) {
+          b.classList.add('border-accent', 'bg-obsidian-surface/90');
+          b.classList.remove('border-white/[0.08]');
+        } else {
+          b.classList.remove('border-accent', 'bg-obsidian-surface/90');
+          b.classList.add('border-white/[0.08]');
+        }
+      });
+
+      const d = stepData[index];
+      const panel = document.getElementById('step-detail-panel');
+
+      gsap.to(panel, { opacity: 0.4, y: 5, duration: 0.15, onComplete: () => {
+        document.getElementById('step-phase-badge').textContent = d.badge;
+        document.getElementById('step-title').textContent = d.title;
+        document.getElementById('step-desc').textContent = d.desc;
+        
+        const previewContainer = document.getElementById('step-code-preview');
+        previewContainer.innerHTML = d.preview.map((line, idx) => {
+          if (idx === 0) return `<div class="text-accent">${line}</div>`;
+          if (line.includes('>')) return `<div class="text-white">${line}</div>`;
+          return `<div class="text-emerald-400">${line}</div>`;
+        }).join('');
+
+        gsap.to(panel, { opacity: 1, y: 0, duration: 0.25 });
+      }});
+    }
+
+    // 5. GSAP SCROLL TRIGGERS & NUMERIC COUNTERS
+    window.addEventListener('DOMContentLoaded', () => {
+      gsap.registerPlugin(ScrollTrigger);
+
+      init3DScene();
+      initCards3D();
+
+      // Number roll-up animations
+      document.querySelectorAll('.counter').forEach(el => {
+        const target = parseFloat(el.getAttribute('data-target'));
+        const isDecimal = target % 1 !== 0;
+
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top 88%",
+          once: true,
+          onEnter: () => {
+            gsap.to(el, {
+              innerHTML: target,
+              duration: 2.2,
+              ease: "power2.out",
+              snap: { innerHTML: isDecimal ? 0.001 : 1 },
+              onUpdate: function() {
+                if (isDecimal) {
+                  el.innerHTML = parseFloat(el.innerHTML).toFixed(3);
+                }
+              }
+            });
+          }
+        });
+      });
+
+      // Sticky Header blur on scroll
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById('main-header');
+        if (window.scrollY > 40) {
+          header.classList.add('py-2');
+          header.classList.remove('py-4');
+        } else {
+          header.classList.add('py-4');
+          header.classList.remove('py-2');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

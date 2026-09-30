@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engineering OS - Design Sampler | Seguridad e Infraestructura</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400..700&family=Space+Grotesk:wght@400..700&family=Space+Mono:wght@400;700&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: 'var(--color-bg)',
+            surface: 'var(--color-surface)',
+            border: 'var(--color-border)',
+            accent: 'var(--color-accent)',
+            accentHover: 'var(--color-accent-hover)',
+            textMain: 'var(--color-text-main)',
+            textMuted: 'var(--color-text-muted)',
+          },
+          fontFamily: {
+            sans: 'var(--font-sans)',
+            mono: 'var(--font-mono)',
+            heading: 'var(--font-heading)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --color-bg: #090b10;
+      --color-surface: #12161f;
+      --color-border: #1f2937;
+      --color-accent: #00d2ff;
+      --color-accent-hover: #00b8e6;
+      --color-text-main: #f8fafc;
+      --color-text-muted: #94a3b8;
+      
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-heading: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Precision tactile buttons */
+    .btn-mechanical {
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      box-shadow: 0 3px 0 var(--color-border);
+      transition: all 0.12s ease;
+    }
+    .btn-mechanical:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+    .btn-mechanical:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 var(--color-border);
+    }
+
+    .btn-minimal {
+      border: 1px solid transparent;
+      background: transparent;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .btn-minimal::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 1px;
+      background: var(--color-accent);
+      transition: width 0.3s ease;
+    }
+    .btn-minimal:hover::after {
+      width: 100%;
+    }
+
+    .btn-solid {
+      background: var(--color-accent);
+      color: var(--color-bg);
+      font-weight: 600;
+      transition: all 0.18s ease;
+    }
+    .btn-solid:hover {
+      background: var(--color-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px -4px rgba(0, 210, 255, 0.3);
+    }
+
+    /* Container archetypes */
+    .card-monolith {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 3px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .card-glass {
+      background: rgba(18, 22, 31, 0.55);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .card-grid {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 0;
+      position: relative;
+    }
+    .card-grid::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px;
+      width: 6px; height: 6px;
+      border-top: 2px solid var(--color-accent);
+      border-left: 2px solid var(--color-accent);
+    }
+    .card-grid::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; right: -1px;
+      width: 6px; height: 6px;
+      border-bottom: 2px solid var(--color-accent);
+      border-right: 2px solid var(--color-accent);
+    }
+    
+    .beacon {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+    
+    .drawer {
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .drawer.open {
+      transform: translateY(0);
+    }
+
+    /* Hairline technical lines */
+    .hairline-b {
+      border-bottom: 1px solid var(--color-border);
+    }
+  </style>
+</head>
+<body class="font-sans min-h-screen pb-32 antialiased selection:bg-accent selection:text-base">
+
+  <!-- Header -->
+  <header class="border-b border-border bg-base/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="ph-bold ph-shield-check text-accent text-2xl"></i>
+        <span class="font-heading font-bold tracking-tight text-lg">PROBADOR DE ADN VISUAL</span>
+        <span class="text-xs font-mono px-2 py-0.5 border border-border text-textMuted uppercase">Loop 0: Security & Infra</span>
+      </div>
+      <div class="text-xs font-mono text-textMuted flex items-center gap-6">
+        <span class="flex items-center gap-1.5"><i class="ph-fill ph-check-circle text-accent"></i> 100% Standalone</span>
+        <span class="flex items-center gap-1.5"><i class="ph-fill ph-x-circle text-red-400"></i> Cero Clichés Hackers</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
+    
+    <!-- LEFT PANEL: SELECTORS -->
+    <div class="lg:col-span-4 space-y-8">
+      
+      <!-- Palette Selection -->
+      <section class="p-5 border border-border bg-surface/50 rounded-sm">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-border">
+          <h2 class="text-xs font-mono text-textMuted uppercase tracking-wider font-semibold">1. Paleta de Color</h2>
+          <span class="text-[10px] font-mono text-accent">REACTIVO EN VIVO</span>
+        </div>
+        <div class="space-y-2.5">
+          <!-- Preset 1 -->
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="palette" value="stealth" checked class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm">Stealth Obsidian</div>
+              <div class="text-xs text-textMuted font-mono">Fondo #090B10 / Cian #00D2FF</div>
+            </div>
+            <div class="ml-auto flex items-center gap-1">
+              <span class="w-3.5 h-3.5 rounded-full bg-[#00d2ff]"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#090b10] border border-gray-700"></span>
+            </div>
+          </label>
+
+          <!-- Preset 2 -->
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="palette" value="tungsten" class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm">Industrial Tungsteno</div>
+              <div class="text-xs text-textMuted font-mono">Fondo #0C0D10 / Ámbar #F59E0B</div>
+            </div>
+            <div class="ml-auto flex items-center gap-1">
+              <span class="w-3.5 h-3.5 rounded-full bg-[#f59e0b]"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#0c0d10] border border-gray-700"></span>
+            </div>
+          </label>
+
+          <!-- Preset 3 -->
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="palette" value="void" class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm">Deep Void & Indigo</div>
+              <div class="text-xs text-textMuted font-mono">Fondo #050814 / Índigo #6366F1</div>
+            </div>
+            <div class="ml-auto flex items-center gap-1">
+              <span class="w-3.5 h-3.5 rounded-full bg-[#6366f1]"></span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#050814] border border-gray-700"></span>
+            </div>
+          </label>
+
+          <!-- Custom Inputs -->
+          <div class="pt-3 border-t border-border mt-3">
+            <div class="text-[11px] font-mono text-textMuted uppercase mb-2 flex items-center justify-between">
+              <span>O ingresa tus propios tonos:</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <label class="block text-[10px] text-textMuted mb-1">Color Fondo</label>
+                <div class="flex items-center gap-1.5 border border-border p-1 bg-base">
+                  <input type="color" id="custom-bg" value="#090b10" oninput="applyCustomColor()" class="w-5 h-5 bg-transparent border-0 cursor-pointer">
+                  <span id="custom-bg-text" class="text-[10px]">#090b10</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] text-textMuted mb-1">Color Acento</label>
+                <div class="flex items-center gap-1.5 border border-border p-1 bg-base">
+                  <input type="color" id="custom-accent" value="#00d2ff" oninput="applyCustomColor()" class="w-5 h-5 bg-transparent border-0 cursor-pointer">
+                  <span id="custom-accent-text" class="text-[10px]">#00d2ff</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Typography -->
+      <section class="p-5 border border-border bg-surface/50 rounded-sm">
+        <h2 class="text-xs font-mono text-textMuted uppercase tracking-wider font-semibold mb-4 pb-2 border-b border-border">2. Tipografía & Jerarquía</h2>
+        <div class="space-y-2.5">
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="typography" value="inter" checked class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm font-sans">Inter + IBM Plex Mono</div>
+              <div class="text-xs text-textMuted font-mono">Precisión corporativa suiza</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="typography" value="space" class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm font-sans" style="font-family: 'Space Grotesk', sans-serif">Space Grotesk + Space Mono</div>
+              <div class="text-xs text-textMuted font-mono">Ingeniería técnica vanguardista</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="typography" value="syne" class="accent-accent" onchange="updateDNA()">
+            <div>
+              <div class="font-semibold text-sm font-sans" style="font-family: 'Syne', sans-serif">Syne + DM Sans</div>
+              <div class="text-xs text-textMuted font-mono">Arquitectónico y contundente</div>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- Card Styles -->
+      <section class="p-5 border border-border bg-surface/50 rounded-sm">
+        <h2 class="text-xs font-mono text-textMuted uppercase tracking-wider font-semibold mb-4 pb-2 border-b border-border">3. Contenedores & Superficies</h2>
+        <div class="grid grid-cols-3 gap-2.5">
+          <label class="text-center p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="cards" value="monolith" checked class="accent-accent mx-auto block mb-2" onchange="updateCards()">
+            <div class="text-xs font-semibold">Monolito</div>
+            <div class="text-[9px] text-textMuted font-mono mt-1">Borde fino</div>
+          </label>
+          <label class="text-center p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="cards" value="glass" class="accent-accent mx-auto block mb-2" onchange="updateCards()">
+            <div class="text-xs font-semibold">Vidrio</div>
+            <div class="text-[9px] text-textMuted font-mono mt-1">Frosted blur</div>
+          </label>
+          <label class="text-center p-3 border border-border cursor-pointer hover:border-accent transition-colors bg-base/40">
+            <input type="radio" name="cards" value="grid" class="accent-accent mx-auto block mb-2" onchange="updateCards()">
+            <div class="text-xs font-semibold">Retícula</div>
+            <div class="text-[9px] text-textMuted font-mono mt-1">Blueprint</div>
+          </label>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT PANEL: INTERACTIVE PREVIEW -->
+    <div class="lg:col-span-8 space-y-12">
+      
+      <!-- HERO MOCKUP -->
+      <section class="border-b border-border pb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 border border-border bg-surface text-xs font-mono text-accent mb-6 rounded-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+          <span>DISPONIBILIDAD OPERATIVA 99.999%</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-heading font-bold leading-[1.1] tracking-tight mb-5">
+          Ingeniería de Precisión para <span class="text-accent underline decoration-accent/30 underline-offset-8">Infraestructura Crítica</span>.
+        </h1>
+        <p class="text-textMuted text-base sm:text-lg max-w-2xl leading-relaxed mb-8">
+          Diseñamos, auditamos y escalamos sistemas distribuidos y seguros. Sin intermediarios, sin promesas vacías. Solo ingeniería de alto nivel para CTOs y CISOs.
+        </p>
+
+        <!-- CTA Buttons Showcase -->
+        <div class="flex flex-wrap items-center gap-4">
+          <button class="px-6 py-3.5 text-sm flex items-center gap-2.5 btn-solid rounded-sm cursor-pointer">
+            <i class="ph-bold ph-whatsapp-logo text-lg"></i>
+            <span>Iniciar Chat en WhatsApp</span>
+          </button>
+          <button class="px-6 py-3.5 text-sm flex items-center gap-2.5 btn-mechanical rounded-sm font-mono cursor-pointer">
+            <i class="ph ph-envelope-simple text-lg"></i>
+            <span>Enviar Correo Técnico</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- CAPABILITIES / SERVICES -->
+      <section>
+        <div class="flex items-end justify-between mb-6">
+          <div>
+            <div class="text-xs font-mono text-accent uppercase tracking-widest mb-1">QUÉ HACEMOS</div>
+            <h2 class="text-2xl font-heading font-bold">Capacidades Core de Ingeniería</h2>
+          </div>
+          <span class="text-xs font-mono text-textMuted">03 ESPECIALIDADES</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="preview-cards">
+          
+          <!-- Card 1 -->
+          <div class="p-6 card-monolith dynamic-card transition-all">
+            <div class="w-10 h-10 flex items-center justify-center border border-border bg-base text-accent mb-4">
+              <i class="ph-bold ph-hard-drives text-xl"></i>
+            </div>
+            <h3 class="text-base font-bold font-heading mb-2">Arquitectura Resiliente & Cloud</h3>
+            <p class="text-xs text-textMuted leading-relaxed mb-4">Diseño y migración de sistemas distribuidos, optimización de topologías y orquestación con Kubernetes/Terraform.</p>
+            <div class="text-[11px] font-mono text-accent flex items-center gap-1.5 btn-minimal inline-block cursor-pointer">
+              <span>METODOLOGÍA</span>
+              <i class="ph ph-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="p-6 card-monolith dynamic-card transition-all">
+            <div class="w-10 h-10 flex items-center justify-center border border-border bg-base text-accent mb-4">
+              <i class="ph-bold ph-git-branch text-xl"></i>
+            </div>
+            <h3 class="text-base font-bold font-heading mb-2">DevSecOps & Pipelines CI/CD</h3>
+            <p class="text-xs text-textMuted leading-relaxed mb-4">Integración de análisis estático (SAST) y dinámico (DAST) bloqueando el 100% de regresiones de seguridad.</p>
+            <div class="text-[11px] font-mono text-accent flex items-center gap-1.5 btn-minimal inline-block cursor-pointer">
+              <span>PIPELINES</span>
+              <i class="ph ph-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="p-6 card-monolith dynamic-card transition-all">
+            <div class="w-10 h-10 flex items-center justify-center border border-border bg-base text-accent mb-4">
+              <i class="ph-bold ph-shield-check text-xl"></i>
+            </div>
+            <h3 class="text-base font-bold font-heading mb-2">Hardening & Auditorías</h3>
+            <p class="text-xs text-textMuted leading-relaxed mb-4">Análisis de código fuente, penetration testing y fortificación de endpoints bajo estándares ISO/NIST.</p>
+            <div class="text-[11px] font-mono text-accent flex items-center gap-1.5 btn-minimal inline-block cursor-pointer">
+              <span>AUDITORÍA</span>
+              <i class="ph ph-arrow-right"></i>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- REAL CASE STUDY (PROOF OF WORK) -->
+      <section class="p-7 border border-border bg-surface relative overflow-hidden dynamic-card">
+        <div class="flex items-center justify-between border-b border-border pb-4 mb-5">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2 h-2 rounded-full bg-accent beacon"></span>
+            <span class="text-xs font-mono text-accent font-semibold tracking-wide uppercase">CASO DE ÉXITO #01 // FINTECH B2B</span>
+          </div>
+          <span class="text-xs font-mono text-textMuted">KUBERNETES SHARDING</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <div class="md:col-span-7">
+            <h4 class="text-lg font-bold font-heading mb-2">Refactorización de Infraestructura de Pagos</h4>
+            <p class="text-xs text-textMuted leading-relaxed mb-4">
+              <strong class="text-textMain">Problema:</strong> Cuello de botella en base de datos monolítica con latencias de 2400ms.<br>
+              <strong class="text-textMain">Solución:</strong> Migración a microservicios distribuidos con sharding y cluster Redis tolerante a fallos.
+            </p>
+            <div class="text-[11px] font-mono text-textMuted">
+              Despliegue completado sin 1 segundo de indisponibilidad para el usuario final.
+            </div>
+          </div>
+
+          <div class="md:col-span-5 grid grid-cols-2 gap-4 border-l border-border pl-6">
+            <div>
+              <div class="text-2xl font-mono font-bold text-accent">45ms</div>
+              <div class="text-[11px] font-mono text-textMuted uppercase mt-0.5">Latencia p99 (era 2400ms)</div>
+            </div>
+            <div>
+              <div class="text-2xl font-mono font-bold text-accent">99.99%</div>
+              <div class="text-[11px] font-mono text-textMuted uppercase mt-0.5">Uptime en Producción</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONVERSION CTA PREVIEW -->
+      <section class="border border-border p-8 bg-surface/30 text-center dynamic-card">
+        <h3 class="text-2xl font-heading font-bold mb-2">¿Estás interesado en blindar tu infraestructura?</h3>
+        <p class="text-textMuted text-sm max-w-md mx-auto mb-6">
+          Hablemos directamente entre ingenieros. Sin ejecutivos de ventas ni rodeos comerciales.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <button class="px-6 py-3 text-sm btn-solid rounded-sm flex items-center gap-2 cursor-pointer">
+            <i class="ph-bold ph-whatsapp-logo"></i>
+            <span>Hablar por WhatsApp</span>
+          </button>
+          <button class="px-6 py-3 text-sm btn-mechanical rounded-sm flex items-center gap-2 font-mono cursor-pointer">
+            <i class="ph ph-envelope-simple"></i>
+            <span>Enviar Correo Técnico</span>
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- BOTTOM FLOATING BAR: COPY DNA -->
+  <div class="fixed bottom-0 left-0 right-0 border-t border-border bg-surface/95 backdrop-blur-md p-4 z-50 shadow-2xl">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div>
+        <div class="text-xs font-mono text-accent uppercase font-semibold">Tu Combinación Seleccionada</div>
+        <p class="text-sm font-semibold text-textMain" id="dna-summary">STEALTH OBSIDIAN | INTER + IBM PLEX | MONOLITO</p>
+      </div>
+      <button onclick="copyDNA()" class="w-full sm:w-auto px-5 py-2.5 bg-accent text-base font-bold text-xs uppercase font-mono flex items-center justify-center gap-2 rounded-sm hover:opacity-90 transition-opacity cursor-pointer">
+        <i class="ph-bold ph-copy"></i>
+        <span>COPIAR ADN SELECCIONADO AL CHAT</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const palettes = {
+      stealth: { bg: '#090b10', surface: '#12161f', border: '#1f2937', accent: '#00d2ff', accentHover: '#00b8e6', textMain: '#f8fafc', textMuted: '#94a3b8' },
+      tungsten: { bg: '#0c0d10', surface: '#181a20', border: '#272a35', accent: '#f59e0b', accentHover: '#d97706', textMain: '#f1f5f9', textMuted: '#94a3b8' },
+      void: { bg: '#050814', surface: '#0b1026', border: '#1a2345', accent: '#6366f1', accentHover: '#4f46e5', textMain: '#f8fafc', textMuted: '#e2e8f0' }
+    };
+
+    const fonts = {
+      inter: { sans: '"Inter", sans-serif', mono: '"IBM Plex Mono", monospace', heading: '"Inter", sans-serif' },
+      space: { sans: '"Space Grotesk", sans-serif', mono: '"Space Mono", monospace', heading: '"Space Grotesk", sans-serif' },
+      syne: { sans: '"DM Sans", sans-serif', mono: '"IBM Plex Mono", monospace', heading: '"Syne", sans-serif' }
+    };
+
+    let activePaletteName = 'stealth';
+
+    function updateDNA() {
+      const paletteRadio = document.querySelector('input[name="palette"]:checked');
+      activePaletteName = paletteRadio ? paletteRadio.value : 'custom';
+      const typoChoice = document.querySelector('input[name="typography"]:checked').value;
+      const cardChoice = document.querySelector('input[name="cards"]:checked').value;
+
+      if (activePaletteName !== 'custom') {
+        const p = palettes[activePaletteName];
+        applyTheme(p.bg, p.surface, p.border, p.accent, p.accentHover, p.textMain, p.textMuted);
+      }
+
+      const f = fonts[typoChoice];
+      const root = document.documentElement;
+      root.style.setProperty('--font-sans', f.sans);
+      root.style.setProperty('--font-mono', f.mono);
+      root.style.setProperty('--font-heading', f.heading);
+
+      updateSummary();
+    }
+
+    function applyCustomColor() {
+      const bg = document.getElementById('custom-bg').value;
+      const accent = document.getElementById('custom-accent').value;
+      document.getElementById('custom-bg-text').textContent = bg;
+      document.getElementById('custom-accent-text').textContent = accent;
+
+      // Deselect preset radios
+      document.querySelectorAll('input[name="palette"]').forEach(r => r.checked = false);
+      activePaletteName = `Personalizada (${bg} / ${accent})`;
+
+      // Simple shade derivation
+      const surface = adjustColor(bg, 15);
+      const border = adjustColor(bg, 35);
+      applyTheme(bg, surface, border, accent, accent, '#ffffff', '#94a3b8');
+      updateSummary();
+    }
+
+    function adjustColor(hex, percent) {
+      let num = parseInt(hex.replace("#",""), 16),
+      amt = Math.round(2.55 * percent),
+      R = (num >> 16) + amt,
+      G = (num >> 8 & 0x00FF) + amt,
+      B = (num & 0x0000FF) + amt;
+      return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+    }
+
+    function applyTheme(bg, surface, border, accent, accentHover, textMain, textMuted) {
+      const root = document.documentElement;
+      root.style.setProperty('--color-bg', bg);
+      root.style.setProperty('--color-surface', surface);
+      root.style.setProperty('--color-border', border);
+      root.style.setProperty('--color-accent', accent);
+      root.style.setProperty('--color-accent-hover', accentHover);
+      root.style.setProperty('--color-text-main', textMain);
+      root.style.setProperty('--color-text-muted', textMuted);
+    }
+
+    function updateCards() {
+      const cardChoice = document.querySelector('input[name="cards"]:checked').value;
+      const cards = document.querySelectorAll('.dynamic-card');
+      
+      cards.forEach(card => {
+        card.classList.remove('card-monolith', 'card-glass', 'card-grid');
+        card.classList.add(`card-${cardChoice}`);
+      });
+      
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const typoChoice = document.querySelector('input[name="typography"]:checked').value;
+      const cardChoice = document.querySelector('input[name="cards"]:checked').value;
+      document.getElementById('dna-summary').textContent = `${activePaletteName.toUpperCase()} | ${typoChoice.toUpperCase()} | ${cardChoice.toUpperCase()}`;
+    }
+
+    function copyDNA() {
+      const typoChoice = document.querySelector('input[name="typography"]:checked').value;
+      const cardChoice = document.querySelector('input[name="cards"]:checked').value;
+      
+      const dnaStr = `He elegido el siguiente ADN Visual:
+- Paleta: ${activePaletteName}
+- Tipografía: ${typoChoice}
+- Contenedores: ${cardChoice}
+`;
+      navigator.clipboard.writeText(dnaStr).then(() => {
+        const btn = document.querySelector('button[onclick="copyDNA()"]');
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="ph-bold ph-check"></i> <span>¡COPIADO AL PORTAPAPELES!</span>';
+        btn.classList.add('bg-emerald-500', 'text-white');
+        setTimeout(() => {
+          btn.innerHTML = oldHtml;
+          btn.classList.remove('bg-emerald-500', 'text-white');
+        }, 2200);
+      });
+    }
+
+    // Init
+    updateDNA();
+  </script>
+</body>
+</html>
