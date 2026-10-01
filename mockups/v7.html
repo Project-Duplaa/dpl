@@ -250,15 +250,15 @@
                 
                 <!-- Eyebrow Pill / Minimalist Line (Exact from Reference media_1790871896285.png) -->
                 <div id="hero-eyebrow" class="flex items-center gap-3 text-[11px] font-mono font-bold tracking-[0.22em] text-[#8e857b] mb-7 uppercase">
-                    <span class="w-7 h-[1.5px] bg-[#b3a594]"></span>
-                    <span>TECNOLOGÍA QUE IMPULSA TU NEGOCIO</span>
+                    <span id="hero-eyebrow-line" class="w-7 h-[1.5px] bg-[#b3a594] inline-block origin-left"></span>
+                    <span id="hero-eyebrow-text">TECNOLOGÍA QUE IMPULSA TU NEGOCIO</span>
                 </div>
                 
                 <!-- Monumental Two-Tone Headline with Cinematic Line-by-Line Reveal -->
                 <h1 id="hero-headline" class="text-5xl sm:text-6xl lg:text-[4.75rem] font-extrabold tracking-[-0.04em] leading-[1.0] mb-7 font-display select-none">
                     <div class="hero-line-wrap overflow-hidden py-0.5"><span class="hero-line inline-block text-stone-black">Software de</span></div>
                     <div class="hero-line-wrap overflow-hidden py-0.5"><span class="hero-line inline-block text-stone-black">alto impacto.</span></div>
-                    <div class="hero-line-wrap overflow-hidden py-0.5"><span class="hero-line inline-block"><span id="word-seguro" class="inline-block transition-colors duration-1000 text-[#8f8983]">Seguro</span> <span class="text-[#8f8983]">por</span></span></div>
+                    <div class="hero-line-wrap overflow-hidden py-0.5"><span class="hero-line inline-block"><span id="word-seguro" class="inline-block transition-colors duration-1000 text-stone-black">Seguro</span> <span class="text-[#8f8983]">por</span></span></div>
                     <div class="hero-line-wrap overflow-hidden py-0.5"><span class="hero-line inline-block text-[#8f8983]">diseño.</span></div>
                 </h1>
                 
@@ -958,83 +958,161 @@
             gsap.registerPlugin(ScrollTrigger);
         }
 
-        // --- 1. HERO CINEMATIC ENTRANCE (~800-1200ms, ZERO BOUNCE) ---
+        // --- 1. HERO CINEMATIC ENTRANCE (ARCHITECTURAL ORCHESTRATION, ZERO BOUNCE) ---
         window.addEventListener('DOMContentLoaded', () => {
-            // Set initial invisible states to guarantee crisp transition
-            gsap.set('#brand-logo', { opacity: 0, y: -6 });
-            gsap.set('#nav-menu-links > a', { opacity: 0, y: -4 });
-            gsap.set('#nav-cta-btn', { opacity: 0, scale: 0.95 });
-            gsap.set('#hero-eyebrow', { opacity: 0, y: 15 });
-            gsap.set('.hero-line', { y: '105%', opacity: 0 });
+            // A. Set Initial Spatial States (Z-depth, Rotations, and Draw Offsets)
+            gsap.set('#brand-logo', { opacity: 0, y: -8 });
+            gsap.set('#nav-menu-links > a', { opacity: 0, y: -6 });
+            gsap.set('#nav-cta-btn', { opacity: 0, scale: 0.94 });
+            
+            gsap.set('#hero-eyebrow-line', { scaleX: 0, transformOrigin: 'left center' });
+            gsap.set('#hero-eyebrow-text', { opacity: 0, x: -8 });
+            gsap.set('.hero-line', { y: '110%', opacity: 0 });
             gsap.set('#word-seguro', { color: '#121211' });
-            gsap.set('#hero-subtitle', { opacity: 0, y: 14 });
-            gsap.set('#hero-buttons > *', { opacity: 0, y: 14 });
-            gsap.set('#hero-monolith-assembly', { opacity: 0, x: 50, scale: 0.96 });
-            gsap.set('#hero-svg-traces', { opacity: 0 });
-            gsap.set('#hero-satellites .satellite-card-3d', { opacity: 0, x: 35 });
-            gsap.set('#hero-bottom-cards > a', { opacity: 0, y: 22 });
-
-            // Master Cinematic Timeline
-            const tl = gsap.timeline({
-                defaults: { ease: "power2.out" }
+            gsap.set('#hero-subtitle', { opacity: 0, y: 16 });
+            gsap.set('#hero-buttons > *', { opacity: 0, y: 16, scale: 0.98 });
+            
+            // Spatial 3D Monolith Assembly (emerges from deeper in Z-space with natural momentum)
+            gsap.set('#hero-monolith-assembly', { 
+                opacity: 0, 
+                x: 55, 
+                z: -80,
+                rotationY: -16, 
+                rotationX: 8,
+                scale: 0.93 
             });
 
-            // 1. Logo appears softly
-            tl.to('#brand-logo', { opacity: 1, y: 0, duration: 0.75 }, 0.05)
-              .to('#nav-menu-links > a', { opacity: 1, y: 0, stagger: 0.05, duration: 0.6 }, 0.15)
-              .to('#nav-cta-btn', { opacity: 1, scale: 1, duration: 0.6 }, 0.22)
+            // SVG Paths initial stroke-dashoffset for draw-in effect
+            const tracePaths = document.querySelectorAll('#hero-svg-traces path');
+            tracePaths.forEach(p => {
+                const len = p.getTotalLength ? p.getTotalLength() : 350;
+                gsap.set(p, {
+                    strokeDasharray: len,
+                    strokeDashoffset: len,
+                    opacity: 0
+                });
+            });
 
-            // 2. Eyebrow label does fade + translate
-              .to('#hero-eyebrow', { opacity: 1, y: 0, duration: 0.75 }, 0.1)
+            // SVG Nodes initial scale 0
+            gsap.set('#hero-svg-traces circle, #hero-svg-traces rect', { 
+                scale: 0, 
+                transformOrigin: "center center", 
+                opacity: 0 
+            });
 
-            // 3. Headline appears line by line
+            // Satellite Cards 3D initial state
+            gsap.set('#hero-satellites .satellite-card-3d', { 
+                opacity: 0, 
+                x: 45, 
+                z: -40,
+                rotationY: -12,
+                rotationX: 5,
+                scale: 0.94
+            });
+
+            // Telemetry signal bars inside cards (scale up from bottom)
+            gsap.set('#hero-satellites .signal-bar', { scaleY: 0, transformOrigin: "bottom center" });
+
+            // Bottom 4 foundation cards
+            gsap.set('#hero-bottom-cards > a', { opacity: 0, y: 26, scale: 0.98 });
+
+            // B. Master Cinematic Orchestrated Timeline
+            const tl = gsap.timeline({
+                defaults: { ease: "power3.out" }
+            });
+
+            // 0. Golden Dust atmosphere awakens
+            tl.to('#hero-dust-canvas', { opacity: 1, duration: 1.2 }, 0)
+
+            // 1. Navigation Header reveal
+              .to('#brand-logo', { opacity: 1, y: 0, duration: 0.8 }, 0.05)
+              .to('#nav-menu-links > a', { opacity: 1, y: 0, stagger: 0.04, duration: 0.65 }, 0.12)
+              .to('#nav-cta-btn', { opacity: 1, scale: 1, duration: 0.65 }, 0.18)
+
+            // 2. Eyebrow Expansion
+              .to('#hero-eyebrow-line', { scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.1)
+              .to('#hero-eyebrow-text', { opacity: 1, x: 0, duration: 0.7 }, 0.18)
+
+            // 3. Headline Cascade (Line by Line with crisp masking)
               .to('.hero-line', {
                   y: '0%',
                   opacity: 1,
-                  duration: 0.82,
-                  stagger: 0.13
-              }, 0.2)
+                  duration: 0.9,
+                  stagger: 0.12,
+                  ease: "power4.out"
+              }, 0.18)
 
-            // 4. Word "Seguro" changes tone slightly
+            // 4. Word "Seguro" Smooth Luxurious Tone Shift
               .to('#word-seguro', {
                   color: '#8f8983',
-                  duration: 0.95,
-                  ease: "power2.out"
-              }, 0.45)
+                  duration: 1.15,
+                  ease: "power2.inOut"
+              }, 0.42)
 
-            // 5. Subtitle & Buttons appear afterwards
-              .to('#hero-subtitle', { opacity: 1, y: 0, duration: 0.7 }, 0.52)
-              .to('#hero-buttons > *', { opacity: 1, y: 0, stagger: 0.1, duration: 0.65 }, 0.68)
-
-            // 6. Right visual elements enter with very slow, majestic movement (ZERO BOUNCE)
+            // 5. 3D Monolith Assembly glides in from Z-space with majestic inertia
               .to('#hero-monolith-assembly', {
                   opacity: 1,
                   x: 0,
+                  z: 10,
+                  rotationY: -9,
+                  rotationX: 4,
                   scale: 1,
-                  duration: 1.35,
-                  ease: "power2.out"
-              }, 0.2)
-              .to('#hero-svg-traces', {
+                  duration: 1.45,
+                  ease: "power3.out"
+              }, 0.22)
+
+            // 6. SVG Circuit Traces draw themselves outward from the monolith
+              .to(tracePaths, {
+                  strokeDashoffset: 0,
                   opacity: 1,
-                  duration: 1.4,
-                  ease: "power2.out"
-              }, 0.3)
+                  stagger: 0.08,
+                  duration: 1.05,
+                  ease: "power2.inOut"
+              }, 0.45)
+
+            // 7. Satellite Cards glide in along the 3D perspective
               .to('#hero-satellites .satellite-card-3d', {
                   opacity: 1,
                   x: 0,
-                  stagger: 0.14,
-                  duration: 1.25,
-                  ease: "power2.out"
-              }, 0.32)
+                  z: 0,
+                  rotationY: -7,
+                  rotationX: 3,
+                  scale: 1,
+                  stagger: 0.12,
+                  duration: 1.15,
+                  ease: "power3.out"
+              }, 0.48)
 
-            // 7. Bottom 4 cards glide in
+            // 8. Circuit Nodes pop in cleanly
+              .to('#hero-svg-traces circle, #hero-svg-traces rect', {
+                  scale: 1,
+                  opacity: 1,
+                  stagger: 0.03,
+                  duration: 0.5,
+                  ease: "back.out(1.8)"
+              }, 0.72)
+
+            // 9. Telemetry signal bars activate
+              .to('#hero-satellites .signal-bar', {
+                  scaleY: 1,
+                  stagger: 0.03,
+                  duration: 0.55,
+                  ease: "power2.out"
+              }, 0.78)
+
+            // 10. Subtitle paragraph & Action Buttons
+              .to('#hero-subtitle', { opacity: 1, y: 0, duration: 0.75 }, 0.55)
+              .to('#hero-buttons > *', { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.7 }, 0.68)
+
+            // 11. Foundation Bottom Cards glide up smoothly
               .to('#hero-bottom-cards > a', {
                   opacity: 1,
                   y: 0,
-                  stagger: 0.08,
-                  duration: 0.75,
-                  ease: "power2.out"
-              }, 0.75);
+                  scale: 1,
+                  stagger: 0.09,
+                  duration: 0.85,
+                  ease: "power3.out"
+              }, 0.82);
         });
 
         // --- 2. AMBIENT GOLDEN DUST CANVAS (LIVING ATMOSPHERE) ---
