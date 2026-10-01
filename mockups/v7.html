@@ -179,48 +179,44 @@
 </head>
 <body class="selection:bg-stone-black selection:text-white">
 
-    <!-- 1. NAVIGATION BAR (Seamless Top Header matching Reference) -->
-    <header class="fixed w-full z-50 top-0 bg-[#fafaf8]/85 backdrop-blur-md border-b border-black/[0.04] transition-all">
-        <nav class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-4 flex items-center justify-between">
+    <!-- 1. NAVIGATION BAR (Floating Pill Dock from Mockup v5) -->
+    <header class="fixed w-full z-50 top-0 pt-4 px-4 sm:px-8 pointer-events-none">
+        <nav class="max-w-7xl mx-auto glass-nav rounded-full px-7 py-4 flex items-center justify-between pointer-events-auto">
             
             <!-- Brand Logo & Pill Tag -->
             <div class="flex items-center gap-3.5" id="brand-logo">
-                <a href="#hero" class="w-9 h-9 rounded-xl bg-stone-black flex items-center justify-center text-white shrink-0 shadow-sm hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
-                        <rect x="8" y="8" width="8" height="8" rx="2" ry="2"/>
-                        <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
-                    </svg>
+                <a href="#hero" class="w-8 h-8 rounded-lg bg-stone-black flex items-center justify-center text-white text-base shadow-sm">
+                    <i class="ph-bold ph-shield-check"></i>
                 </a>
-                <span class="font-extrabold text-[16px] tracking-tight text-stone-black font-display">AEGIS.DEV</span>
-                <span class="hidden sm:inline-flex items-center px-3 py-1 text-[9.5px] font-mono font-bold uppercase tracking-widest bg-stone-subtle/70 text-stone-gray rounded-full border border-stone-border">
+                <span class="font-extrabold text-[15px] tracking-tight text-stone-black font-display">AEGIS.DEV</span>
+                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 text-[9.5px] font-mono font-bold uppercase tracking-widest bg-stone-subtle text-stone-gray rounded border border-stone-border">
                     SOFTWARE & CIBERSEGURIDAD
                 </span>
             </div>
             
             <!-- Center Nav Links with Phosphor Icons -->
-            <div class="hidden lg:flex items-center gap-8 text-[11.5px] font-bold text-stone-black tracking-widest uppercase font-display" id="nav-menu-links">
-                <a href="#capacidades" class="hover:text-stone-gray transition-colors flex items-center gap-2">
-                    <i class="ph-bold ph-squares-four text-base"></i>
+            <div class="hidden lg:flex items-center gap-7 text-[11px] font-bold text-stone-black tracking-widest uppercase font-display" id="nav-menu-links">
+                <a href="#capacidades" class="hover:text-stone-gray transition-colors flex items-center gap-1.5">
+                    <i class="ph-bold ph-squares-four text-sm"></i>
                     <span>CAPACIDADES</span>
                 </a>
-                <a href="#proyectos" class="hover:text-stone-gray transition-colors flex items-center gap-2">
-                    <i class="ph-bold ph-clipboard-text text-base"></i>
+                <a href="#proyectos" class="hover:text-stone-gray transition-colors flex items-center gap-1.5">
+                    <i class="ph-bold ph-article text-sm"></i>
                     <span>CASOS DE ESTUDIO</span>
                 </a>
-                <a href="#estandares" class="hover:text-stone-gray transition-colors flex items-center gap-2">
-                    <i class="ph-bold ph-shield text-base"></i>
+                <a href="#estandares" class="hover:text-stone-gray transition-colors flex items-center gap-1.5">
+                    <i class="ph-bold ph-shield-check text-sm"></i>
                     <span>SEGURIDAD</span>
                 </a>
-                <a href="#metodologia" class="hover:text-stone-gray transition-colors flex items-center gap-2">
-                    <i class="ph-bold ph-chart-bar text-base"></i>
+                <a href="#metodologia" class="hover:text-stone-gray transition-colors flex items-center gap-1.5">
+                    <i class="ph-bold ph-chart-bar text-sm"></i>
                     <span>METODOLOGÍA</span>
                 </a>
             </div>
             
             <!-- Right CTA Button -->
-            <button onclick="openContactModal()" id="nav-cta-btn" class="btn-tactile bg-stone-black text-white px-6 py-2.5 rounded-full text-xs font-bold tracking-widest hover:bg-stone-charcoal transition-all flex items-center gap-2.5 shadow-sm uppercase font-display cursor-pointer">
-                <i class="ph-bold ph-chat-circle-dots text-base"></i>
+            <button onclick="openContactModal()" id="nav-cta-btn" class="btn-tactile bg-stone-black text-white px-5 py-2.5 rounded-full text-xs font-bold tracking-widest hover:bg-stone-charcoal transition-all flex items-center gap-2 shadow-sm uppercase font-display cursor-pointer">
+                <i class="ph-bold ph-chat-circle-dots text-sm"></i>
                 <span>HABLEMOS</span>
                 <i class="ph-bold ph-arrow-right text-xs"></i>
             </button>
@@ -229,7 +225,7 @@
     </header>
 
     <!-- 2. MONUMENTAL HERO STAGE (SEAMLESS ARCHITECTURAL LUXURY) -->
-    <section id="hero" class="relative min-h-[95vh] pt-28 lg:pt-32 pb-14 px-6 sm:px-8 lg:px-12 flex flex-col justify-center overflow-hidden">
+    <section id="hero" class="relative min-h-[95vh] pt-32 lg:pt-36 pb-14 px-6 sm:px-8 lg:px-12 flex flex-col justify-center overflow-hidden">
         
         <!-- Ambient Golden Dust Canvas (Living Atmosphere) -->
         <canvas id="hero-dust-canvas" class="absolute inset-0 pointer-events-none z-[1]"></canvas>
@@ -961,8 +957,9 @@
         // --- 1. HERO CINEMATIC ENTRANCE (ARCHITECTURAL ORCHESTRATION, ZERO BOUNCE) ---
         window.addEventListener('DOMContentLoaded', () => {
             // A. Set Initial Spatial States (Z-depth, Rotations, and Draw Offsets)
-            gsap.set('#brand-logo', { opacity: 0, y: -8 });
-            gsap.set('#nav-menu-links > a', { opacity: 0, y: -6 });
+            gsap.set('header nav', { opacity: 0, y: -10 });
+            gsap.set('#brand-logo', { opacity: 0, y: -6 });
+            gsap.set('#nav-menu-links > a', { opacity: 0, y: -4 });
             gsap.set('#nav-cta-btn', { opacity: 0, scale: 0.94 });
             
             gsap.set('#hero-eyebrow-line', { scaleX: 0, transformOrigin: 'left center' });
@@ -1025,9 +1022,10 @@
             tl.to('#hero-dust-canvas', { opacity: 1, duration: 1.2 }, 0)
 
             // 1. Navigation Header reveal
-              .to('#brand-logo', { opacity: 1, y: 0, duration: 0.8 }, 0.05)
-              .to('#nav-menu-links > a', { opacity: 1, y: 0, stagger: 0.04, duration: 0.65 }, 0.12)
-              .to('#nav-cta-btn', { opacity: 1, scale: 1, duration: 0.65 }, 0.18)
+              .to('header nav', { opacity: 1, y: 0, duration: 0.75, ease: "power2.out" }, 0.04)
+              .to('#brand-logo', { opacity: 1, y: 0, duration: 0.8 }, 0.08)
+              .to('#nav-menu-links > a', { opacity: 1, y: 0, stagger: 0.04, duration: 0.65 }, 0.14)
+              .to('#nav-cta-btn', { opacity: 1, scale: 1, duration: 0.65 }, 0.2)
 
             // 2. Eyebrow Expansion
               .to('#hero-eyebrow-line', { scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.1)
