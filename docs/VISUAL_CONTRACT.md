@@ -23,8 +23,8 @@
 - **Badges & Telemetry:** `Space Mono` (Medium 500)
 
 ## 4. Architectural Hero Composition (Exact Match)
-- **Header:** Logo `AEGIS.DEV`, pill `SOFTWARE & CIBERSEGURIDAD`, 4 enlaces con iconos, botón `Hablemos ->`.
+- **Header:** Logo `ORVI`, pill `SOFTWARE & CIBERSEGURIDAD`, 4 enlaces con iconos, botón `Hablemos ->`.
 - **Hero Grid:**
   - Columna Izquierda: Badge de píldora con punto, titular de 2 tonos, párrafo, botones de WhatsApp y Correo.
-  - Columna Derecha: Composición de tarjetas flotantes sobre fondo arquitectónico luminoso con reflejos de luz y hojas botánicas. Tarjeta central de cristal con logo `AEGIS.DEV`, 3 tarjetas flotantes apiladas con barras de señal.
+  - Columna Derecha: Composición de tarjetas flotantes sobre fondo arquitectónico luminoso con reflejos de luz y hojas botánicas. Tarjeta central de cristal con logo `ORVI`, 3 tarjetas flotantes apiladas con barras de señal.
   - Fila Inferior: 4 tarjetas horizontales con `< / >`, nube, escudo y gráfico.

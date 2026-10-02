@@ -1,61 +1,77 @@
-﻿# AEGIS.DEV — Software de Alto Impacto & Ciberseguridad
+# ORVI by DPL — Operational Virtual Infrastructure & Ciberseguridad
 
-Plataforma web promocional insignia de **AEGIS.DEV**, diseñada bajo estándares editoriales de alta dirección y arquitectura digital suiza (calibre \ USD), inspirada en productos globales como Apple, Linear y Stripe Press.
+Plataforma web promocional insignia de **ORVI** (un producto de **DPL**), diseñada bajo estándares editoriales de ingeniería de alta precisión, arquitectura digital suiza y estética háptica táctil de lujo espacial.
 
 ---
 
 ## 🌟 Características Principales
 
-- **Hero Cinemático & Escultura 3D:** Arte digital 3D de alta resolución con dunas esculturales de obsidiana, cascadas de porcelana y aros de cinta dorada, acompañado de un lienzo interactivo de micropartículas doradas.
-- **Entrada Coreografiada (GSAP 3):** Animación de entrada de ~1000ms sin rebotes (revelación suave de logo, etiqueta superior, titular línea por línea con mutación cromática de *“Seguro”*, aparición retardada de botones y entrada majestuosa de tarjetas satélites).
-- **Cero Abuso de Cards:** Arquitectura editorial abierta basada en índices tipográficos con divisores micrométricos y cifras monumentales a gran escala.
-- **Galería de Exhibición Interactiva:** Casos de éxito en producción con fotografías fotorrealistas en alta resolución (*Fintech Core Banking, HealthTech Telemedicina, Enterprise Cloud Mesh*) y métricas de impacto verificadas.
-- **Modal de Contacto & Solicitud de NDA:** Modal con formulario interactivo y acuerdos de confidencialidad directos para CTOs y directivos.
-- **Integración Directa con WhatsApp:** Enlaces con mensajes profesionales preconfigurados.
+- **Hero Cinemático Monumental:**
+  - Lienzo interactivo Three.js con ondas esculturales de seda fluida en tonos obsidiana y crema marfil con movimiento ultra-lento (`t * 0.26`) y respuesta inercial al mouse.
+  - Cintas doradas curvas continuas y partículas matemáticas sutiles en suspensión.
+  - Escultura de porcelana 3D (`hero-monolith`) con biseles de cristal esmerilado y el emblema oficial radiante de ORVI ampliado a escala heroica.
+  - Tres tarjetas satélite de telemetría flotantes (*Infraestructura Cloud Segura*, *Desarrollo Escalable*, *Ciberseguridad por Diseño*) con barras de señal vivas.
+- **Rendimiento Instantáneo Zero-Lag:**
+  - Carga inmediata sin saltos ni demoras artificiales. Los elementos críticos son sólidos y nítidos desde el primer fotograma.
+- **Identidad Oficial ORVI:**
+  - Logotipo e isotipo oficial de ORVI con integración de marca DPL en header y footer.
+  - Favicon de alta fidelidad con Data URI Base64 embebido en `<head>` para compatibilidad garantizada en pestaña tanto en `file:///` local como en producción web.
+- **Arquitectura Editorial Abierta:**
+  - Exhibición de capacidades de ingeniería (*Desarrollo de Software*, *Infraestructura Cloud*, *Ciberseguridad*, *Consultoría Tecnológica*).
+  - Casos de estudio en producción con métricas de impacto verificadas (Fintech, Healthtech, Cloud Enterprise).
+- **Conversión Directa:**
+  - Botones táctiles a canal oficial de WhatsApp y modal interactivo para solicitud de propuestas y acuerdos de confidencialidad (NDA).
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
-- **HTML5 & CSS3 Avanzado:** Glassmorphism de alta precisión (ackdrop-filter), variables de diseño suizo y física táctil.
-- **Tailwind CSS (CDN):** Sistema de espaciado y utilidades tipográficas.
-- **GSAP 3.12 & ScrollTrigger:** Coreografía de entrada, paralaje tridimensional reactivo al mouse y revelaciones progresivas al scroll.
+- **HTML5 & CSS3 Avanzado:** Glassmorphism de alta precisión, acabados de porcelana táctil y sombras de oclusión ambiental.
+- **Tailwind CSS (CDN):** Sistema de utilidades y espaciado de precisión micrométrica.
+- **Three.js (r128):** Malla procedural de ondas de seda con sombreado Phong y movimiento fluido ultra-lento.
+- **GSAP 3.12 & ScrollTrigger:** Coreografía de micro-interacciones y paralaje reactivo.
 - **Phosphor Icons Web:** Iconografía duotone sobria de grado corporativo.
-- **Google Fonts:** Plus Jakarta Sans (Titulares), DM Sans (Cuerpo de texto) y Space Mono (Telemetría e indicadores).
+- **Google Fonts:** Plus Jakarta Sans (titulares), DM Sans (cuerpo de texto) y Space Mono (telemetría e indicadores).
 
 ---
 
 ## 🚀 Cómo Visualizar
 
-El proyecto es completamente standalone (no requiere instalación previa de Node.js o servidores backend):
+El proyecto es completamente standalone (no requiere dependencias de Node.js ni servidor local):
 
 1. Clona el repositorio:
-   `ash
+   ```bash
    git clone https://github.com/Project-Duplaa/dpl.git
    cd dpl
-   `
-2. Abre index.html en cualquier navegador moderno (doble clic o mediante Live Server).
+   ```
+2. Abre `index.html` en cualquier navegador moderno (doble clic en Windows o mediante Live Server).
 
 ---
 
 ## 📁 Estructura del Proyecto
 
-`
-├── index.html              # Página principal de producción
+```
+├── index.html              # Página principal oficial de producción
 ├── design-sampler.html     # Matriz interactiva de selección de ADN visual
 ├── README.md               # Documentación general
 ├── .preferences.md         # Directivas y especificaciones de diseño
-├── assets/                 # Renders y fotografías en alta resolución
-│   ├── hero-bg.jpg
+├── assets/                 # Recursos y logos en alta resolución
+│   ├── orvi-logo.svg       # Logotipo tipográfico oficial ORVI
+│   ├── dpl-logo.svg        # Logotipo corporativo DPL
+│   ├── orvi-icon.png       # Emblema oficial transparente de alta resolución
+│   ├── favicon.ico         # Favicon multi-resolución
+│   ├── favicon-*.png       # Variantes de favicon para navegador y PWA
+│   ├── hero-bg.jpg         # Textura de fondo arquitectónica
 │   ├── fintech-showcase.jpg
 │   ├── healthtech-showcase.jpg
 │   └── security-showcase.jpg
 ├── docs/                   # Especificaciones de producto y contrato visual
 │   ├── PRD.md
 │   └── VISUAL_CONTRACT.md
-└── mockups/                # Histórico de iteraciones visuales (v1 - v7)
-`
+└── mockups/                # Maquetas y registros de iteración
+    └── hero-option3-svg.html # Maqueta espejo oficial
+```
 
 ---
 
-&copy; 2026 AEGIS.DEV. Todos los derechos reservados.
+&copy; 2026 ORVI by DPL. Todos los derechos reservados.
